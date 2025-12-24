@@ -100,7 +100,7 @@ impl<'a> Table<'a> {
         let mut action = vec![vec![ActionCell::Empty; action_cols]; rows];
         let mut goto = vec![vec![None; goto_cols]; rows];
         let mut conflict = false;
-        for (row, is) in family.item_sets().enumerate() {
+        for (row, is) in family.item_sets().iter().enumerate() {
             for (tok, to) in family.gotos_of(row).into_iter().flatten() {
                 match tok {
                     Token::Terminal(t) => {
@@ -225,7 +225,7 @@ mod test {
             .unwrap()
             .augmented();
         let family = Family::from_grammar(&grammar);
-        family.item_sets().enumerate().for_each(|(idx, is)| {
+        family.item_sets().iter().enumerate().for_each(|(idx, is)| {
             println!("I_{idx}:");
             is.items().for_each(|i| println!("{}", i));
             println!("reduces:");

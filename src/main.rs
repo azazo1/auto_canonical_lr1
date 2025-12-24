@@ -23,7 +23,7 @@ fn main() {
     }
     println!();
     let family = Family::from_grammar(&grammar);
-    for (from, is) in family.item_sets().enumerate() {
+    for (from, is) in family.item_sets().iter().enumerate() {
         println!("I_{from}:");
         for item in is.items() {
             println!("{}", item);

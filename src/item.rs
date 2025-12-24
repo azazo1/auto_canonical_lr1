@@ -355,13 +355,9 @@ impl<'a> Family<'a> {
     }
 
     /// 按照 I_i (i = 0, 1, 2, 3...) 顺序获取项集.
-    pub fn item_sets(&self) -> impl Iterator<Item = &'a ItemSet<'a>> {
-        self.item_sets.iter().copied()
-    }
-
     #[must_use]
-    pub fn get_item_set(&self, idx: usize) -> Option<&'a ItemSet<'a>> {
-        self.item_sets.get(idx).copied()
+    pub fn item_sets(&self) -> &[&'a ItemSet<'a>] {
+        &self.item_sets
     }
 
     /// 遍历 gotos (起始项集, 转换 Token, 到达项集).
