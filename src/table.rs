@@ -28,6 +28,14 @@ impl Display for ActionCell {
 }
 
 impl ActionCell {
+    pub fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+
+    pub fn is_conflict(&self) -> bool {
+        matches!(self, Self::Conflict(_, _))
+    }
+
     /// 放入新的 cell 内容, 返回是否冲突
     fn update(&mut self, cell: ActionCell) -> bool {
         let mut conflict = false;
@@ -199,10 +207,28 @@ impl<'a> Table<'a> {
     /// # Returns
     /// 如果项集族中没有这个状态或者文法中没有这个终结符, 那么返回 [`None`].
     #[must_use]
-    pub fn action(&self, state: usize, term: Terminal<'a>) -> Option<ActionCell> {
+    pub fn action(&self, state: usize, term: Terminal) -> Option<ActionCell> {
         let term_idx = *self.term_idxes.get(&term)?;
         let row = self.action.get(state)?;
         Some(row[term_idx].clone())
+    }
+
+    /// 遍历一个项集状态的所有非 [`ActionCell::Empty`] actions.
+    /// 如果这个项集状态不存在, 那么返回 [`None`].
+    #[must_use]
+    pub fn actions(
+        &self,
+        state: usize,
+    ) -> Option<impl Iterator<Item = (Terminal<'a>, &ActionCell)>> {
+        self.action.get(state).map(|v| {
+            v.iter().enumerate().filter_map(|(i, a)| {
+                if a.is_empty() {
+                    None
+                } else {
+                    Some((self.terms[i], a))
+                }
+            })
+        })
     }
 }
 
