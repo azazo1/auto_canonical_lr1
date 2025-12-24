@@ -307,7 +307,7 @@ pub struct Family<'a> {
     item_sets_idx: HashMap<&'a ItemSet<'a>, usize>,
     /// 描述了 goto 动作.
     /// GOTO(key, value.0) = value.1
-    gotos: HashMap<usize, Vec<(Token<'a>, usize)>>,
+    gotos: HashMap<usize, BTreeSet<(Token<'a>, usize)>>,
 }
 
 impl<'a> Family<'a> {
@@ -319,7 +319,7 @@ impl<'a> Family<'a> {
         #[allow(clippy::mutable_key_type)]
         let mut item_sets_idx = HashMap::new();
         let mut item_sets = Vec::new();
-        let mut gotos: HashMap<usize, Vec<(Token<'a>, usize)>> = HashMap::new();
+        let mut gotos: HashMap<usize, BTreeSet<(Token<'a>, usize)>> = HashMap::new();
         item_sets_idx.insert(i0, 0);
         item_sets.push(i0);
         loop {
@@ -330,12 +330,14 @@ impl<'a> Family<'a> {
                         continue;
                     };
                     let nis = &*bump.alloc(nis);
-                    if !item_sets_idx.contains_key(nis) {
+                    if let Some(&to) = item_sets_idx.get(&nis) {
+                        gotos.entry(from).or_default().insert((tok, to));
+                    } else {
                         // 新加入的项集: nis
                         // GOTO(is, tok) = nis
                         let to = item_sets.len() + new_item_sets.len();
+                        gotos.entry(from).or_default().insert((tok, to));
                         // println!("{:?}, {}, {}", tok, from, to);
-                        gotos.entry(from).or_default().push((tok, to));
                         new_item_sets.push(nis);
                         item_sets_idx.insert(nis, to);
                     }
@@ -699,5 +701,43 @@ mod test {
         assert_eq!(item.expected(), None);
         assert_eq!(item.goto(EPSILON.into()), None);
         assert_eq!(format!("{}", item), r#"head -> ⋅ 〈eof〉"#);
+    }
+
+    #[test]
+    fn family_of_complex_cfg() {
+        let bump = Bump::new();
+        let grammar = Grammar::from_cfg(
+            r#"program -> compoundstmt
+stmt -> ifstmt | whilestmt | assgstmt | compoundstmt
+compoundstmt -> { stmts }
+stmts -> stmt stmts | E
+ifstmt -> if ( boolexpr ) then stmt else stmt
+whilestmt -> while ( boolexpr ) stmt
+assgstmt -> ID = arithexpr ;
+boolexpr -> arithexpr boolop arithexpr
+boolop -> < | > | <= | >= | ==
+arithexpr -> multexpr arithexprprime
+arithexprprime -> + multexpr arithexprprime | - multexpr arithexprprime | E
+multexpr -> simpleexpr multexprprime
+multexprprime -> * simpleexpr multexprprime | / simpleexpr multexprprime | E
+simpleexpr -> ID | NUM | ( arithexpr )"#,
+            "program".into(),
+            &bump,
+        )
+        .unwrap();
+        let family = Family::from_grammar(&grammar);
+        assert_eq!(
+            family.gotos_of(42).map(|it| it.collect::<Vec<_>>()),
+            Some(
+                [
+                    (Terminal::from("(").into(), 20,),
+                    (Terminal::from("ID").into(), 21,),
+                    (Terminal::from("NUM").into(), 22,),
+                    (NonTerminal::from("multexpr").into(), 71,),
+                    (NonTerminal::from("simpleexpr").into(), 25,),
+                ]
+                .into()
+            )
+        );
     }
 }
