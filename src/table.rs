@@ -4,9 +4,9 @@ use crate::{Family, Grammar, NonTerminal, Terminal, Token};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum ActionCell {
-    /// 移入项集序号.
+    /// 移入项集状态编号.
     Shift(usize),
-    /// 规约产生式序号.
+    /// 规约产生式编号.
     Reduce(usize),
     /// 包含冲突的两个或者多个表项(树状嵌套).
     Conflict(Box<ActionCell>, Box<ActionCell>),
@@ -64,7 +64,7 @@ impl ActionCell {
 pub struct Table<'a> {
     /// ACTION 表
     action: Vec<Vec<ActionCell>>,
-    /// GOTO 表, 每个格子表示 GOTO 到的项集序号.
+    /// GOTO 表, 每个格子表示 GOTO 到的项集状态编号.
     goto: Vec<Vec<Option<usize>>>,
     family: &'a Family<'a>,
     grammar: &'a Grammar<'a>,
@@ -74,6 +74,7 @@ pub struct Table<'a> {
     non_terms: Vec<NonTerminal<'a>>,
     term_idxes: HashMap<Terminal<'a>, usize>,
     non_term_idxes: HashMap<NonTerminal<'a>, usize>,
+    /// 文法在规范 LR(1) 分析中是否是冲突的.
     conflict: bool,
 }
 
@@ -152,6 +153,11 @@ impl<'a> Table<'a> {
         self.non_terms.len()
     }
 
+    #[must_use]
+    pub fn conflict(&self) -> bool {
+        self.conflict
+    }
+
     /// 使用 markdown 形式输出表格.
     #[must_use]
     pub fn to_markdown(&self) -> String {
@@ -187,6 +193,16 @@ impl<'a> Table<'a> {
             data_lines += "\n";
         }
         format!("{header_line}\n{sep_line}\n{}", data_lines.trim_end())
+    }
+
+    /// 查询 ACTION 表, 获取当前项集状态在某个终结符下的动作.
+    /// # Returns
+    /// 如果项集族中没有这个状态或者文法中没有这个终结符, 那么返回 [`None`].
+    #[must_use]
+    pub fn action(&self, state: usize, term: Terminal<'a>) -> Option<ActionCell> {
+        let term_idx = *self.term_idxes.get(&term)?;
+        let row = self.action.get(state)?;
+        Some(row[term_idx].clone())
     }
 }
 
