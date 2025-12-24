@@ -21,9 +21,9 @@
   20 arithexprprime -> - multexpr arithexprprime
   21 arithexprprime -> E
   22 multexpr -> simpleexpr multexprprime
-  23 multex_prprime -> * simpleexpr multexprprime
-  24 multex_prprime -> / simpleexpr multexprprime
-  25 multex_prprime -> E
+  23 multexprprime -> * simpleexpr multexprprime
+  24 multexprprime -> / simpleexpr multexprprime
+  25 multexprprime -> E
   26 simpleexpr -> ID
   27 simpleexpr -> NUM
   28 simpleexpr -> ( arithexpr )
@@ -91,25 +91,25 @@ whilestmt -> ⋅ while ( boolexpr ) stmt 〈{, }, ID, if, while〉
 reduces:
 t"}" r 8
 gotos:
-I_4 -- nt"stmts" --> I_14
+I_4 -- nt"stmts" --> I_19
 
 I_5:
 assgstmt -> ID ⋅ = arithexpr ; 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_5 -- t"=" --> I_16
+I_5 -- t"=" --> I_18
 
 I_6:
 ifstmt -> if ⋅ ( boolexpr ) then stmt else stmt 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_6 -- t"(" --> I_15
+I_6 -- t"(" --> I_14
 
 I_7:
 whilestmt -> while ⋅ ( boolexpr ) stmt 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_7 -- t"(" --> I_18
+I_7 -- t"(" --> I_15
 
 I_8:
 stmt -> assgstmt ⋅ 〈{, }, ID, if, while〉
@@ -162,7 +162,7 @@ I_12:
 compoundstmt -> { stmts ⋅ } 〈eof〉
 reduces:
 gotos:
-I_12 -- t"}" --> I_19
+I_12 -- t"}" --> I_16
 
 I_13:
 stmt -> whilestmt ⋅ 〈{, }, ID, if, while〉
@@ -175,41 +175,40 @@ t"while" r 3
 gotos:
 
 I_14:
-compoundstmt -> { stmts ⋅ } 〈{, }, ID, if, while〉
-reduces:
-gotos:
-I_14 -- t"}" --> I_30
-
-I_15:
 arithexpr -> ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
 boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
 ifstmt -> if ( ⋅ boolexpr ) then stmt else stmt 〈{, }, ID, if, while〉
 multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, <, >, <=, ==, >=〉
 reduces:
 gotos:
-I_15 -- t"(" --> I_20
-I_15 -- t"ID" --> I_21
-I_15 -- t"NUM" --> I_22
-I_15 -- nt"arithexpr" --> I_23
-I_15 -- nt"boolexpr" --> I_24
-I_15 -- nt"multexpr" --> I_25
-I_15 -- nt"simpleexpr" --> I_26
+I_14 -- t"(" --> I_20
+I_14 -- t"ID" --> I_21
+I_14 -- t"NUM" --> I_22
+I_14 -- nt"arithexpr" --> I_23
+I_14 -- nt"boolexpr" --> I_24
+I_14 -- nt"multexpr" --> I_25
+I_14 -- nt"simpleexpr" --> I_26
+
+I_15:
+arithexpr -> ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
+boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, <, >, <=, ==, >=〉
+whilestmt -> while ( ⋅ boolexpr ) stmt 〈{, }, ID, if, while〉
+reduces:
+gotos:
+I_15 -- nt"boolexpr" --> I_34
 
 I_16:
-arithexpr -> ⋅ multexpr arithexprprime 〈;〉
-assgstmt -> ID = ⋅ arithexpr ; 〈{, }, ID, if, while〉
-multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
+compoundstmt -> { stmts } ⋅ 〈eof〉
 reduces:
+t"eof" r 6
 gotos:
-I_16 -- nt"arithexpr" --> I_27
-I_16 -- nt"multexpr" --> I_28
-I_16 -- nt"simpleexpr" --> I_29
 
 I_17:
 stmts -> stmt stmts ⋅ 〈}〉
@@ -218,46 +217,64 @@ t"}" r 7
 gotos:
 
 I_18:
-arithexpr -> ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
-boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
-multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
-whilestmt -> while ( ⋅ boolexpr ) stmt 〈{, }, ID, if, while〉
+arithexpr -> ⋅ multexpr arithexprprime 〈;〉
+assgstmt -> ID = ⋅ arithexpr ; 〈{, }, ID, if, while〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, ;〉
 reduces:
 gotos:
-I_18 -- nt"boolexpr" --> I_31
+I_18 -- t"(" --> I_27
+I_18 -- t"ID" --> I_28
+I_18 -- t"NUM" --> I_29
+I_18 -- nt"arithexpr" --> I_30
+I_18 -- nt"multexpr" --> I_31
+I_18 -- nt"simpleexpr" --> I_32
 
 I_19:
-compoundstmt -> { stmts } ⋅ 〈eof〉
+compoundstmt -> { stmts ⋅ } 〈{, }, ID, if, while〉
 reduces:
-t"eof" r 6
 gotos:
+I_19 -- t"}" --> I_33
 
 I_20:
 arithexpr -> ⋅ multexpr arithexprprime 〈)〉
 multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ( ⋅ arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
+simpleexpr -> ⋅ ( arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ( ⋅ arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈), *, +, -, /〉
+simpleexpr -> ⋅ NUM 〈), *, +, -, /〉
 reduces:
 gotos:
-I_20 -- nt"arithexpr" --> I_36
-I_20 -- nt"multexpr" --> I_37
-I_20 -- nt"simpleexpr" --> I_38
+I_20 -- nt"arithexpr" --> I_62
 
 I_21:
-simpleexpr -> ID ⋅ 〈multexprprime〉
+simpleexpr -> ID ⋅ 〈*, +, -, /, <, >, <=, ==, >=〉
 reduces:
-t"multexprprime" r 26
+t"*" r 26
+t"+" r 26
+t"-" r 26
+t"/" r 26
+t"<" r 26
+t">" r 26
+t"<=" r 26
+t"==" r 26
+t">=" r 26
 gotos:
 
 I_22:
-simpleexpr -> NUM ⋅ 〈multexprprime〉
+simpleexpr -> NUM ⋅ 〈*, +, -, /, <, >, <=, ==, >=〉
 reduces:
-t"multexprprime" r 27
+t"*" r 27
+t"+" r 27
+t"-" r 27
+t"/" r 27
+t"<" r 27
+t">" r 27
+t"<=" r 27
+t"==" r 27
+t">=" r 27
 gotos:
 
 I_23:
@@ -269,18 +286,18 @@ boolop -> ⋅ == 〈(, ID, NUM〉
 boolop -> ⋅ >= 〈(, ID, NUM〉
 reduces:
 gotos:
-I_23 -- t"<" --> I_42
-I_23 -- t">" --> I_43
-I_23 -- t"<=" --> I_44
-I_23 -- t"==" --> I_45
-I_23 -- t">=" --> I_46
-I_23 -- nt"boolop" --> I_47
+I_23 -- t"<" --> I_49
+I_23 -- t">" --> I_50
+I_23 -- t"<=" --> I_51
+I_23 -- t"==" --> I_52
+I_23 -- t">=" --> I_53
+I_23 -- nt"boolop" --> I_54
 
 I_24:
 ifstmt -> if ( boolexpr ⋅ ) then stmt else stmt 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_24 -- t")" --> I_51
+I_24 -- t")" --> I_45
 
 I_25:
 arithexpr -> multexpr ⋅ arithexprprime 〈<, >, <=, ==, >=〉
@@ -294,23 +311,71 @@ t"<=" r 21
 t"==" r 21
 t">=" r 21
 gotos:
-I_25 -- t"+" --> I_33
-I_25 -- t"-" --> I_34
-I_25 -- nt"arithexprprime" --> I_35
+I_25 -- t"+" --> I_42
+I_25 -- t"-" --> I_43
+I_25 -- nt"arithexprprime" --> I_44
 
 I_26:
 multexpr -> simpleexpr ⋅ multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> ⋅ * simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> ⋅ 〈+, -, <, >, <=, ==, >=〉
 reduces:
+t"+" r 25
+t"-" r 25
+t"<" r 25
+t">" r 25
+t"<=" r 25
+t"==" r 25
+t">=" r 25
 gotos:
-I_26 -- t"multexprprime" --> I_32
+I_26 -- t"*" --> I_46
+I_26 -- t"/" --> I_47
+I_26 -- nt"multexprprime" --> I_48
 
 I_27:
+arithexpr -> ⋅ multexpr arithexprprime 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ( ⋅ arithexpr ) 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ ID 〈), *, +, -, /〉
+simpleexpr -> ⋅ NUM 〈), *, +, -, /〉
+reduces:
+gotos:
+I_27 -- t"(" --> I_36
+I_27 -- t"ID" --> I_37
+I_27 -- t"NUM" --> I_38
+I_27 -- nt"arithexpr" --> I_39
+I_27 -- nt"multexpr" --> I_40
+I_27 -- nt"simpleexpr" --> I_41
+
+I_28:
+simpleexpr -> ID ⋅ 〈*, +, -, /, ;〉
+reduces:
+t"*" r 26
+t"+" r 26
+t"-" r 26
+t"/" r 26
+t";" r 26
+gotos:
+
+I_29:
+simpleexpr -> NUM ⋅ 〈*, +, -, /, ;〉
+reduces:
+t"*" r 27
+t"+" r 27
+t"-" r 27
+t"/" r 27
+t";" r 27
+gotos:
+
+I_30:
 assgstmt -> ID = arithexpr ⋅ ; 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_27 -- t";" --> I_50
+I_30 -- t";" --> I_35
 
-I_28:
+I_31:
 arithexpr -> multexpr ⋅ arithexprprime 〈;〉
 arithexprprime -> ⋅ + multexpr arithexprprime 〈;〉
 arithexprprime -> ⋅ - multexpr arithexprprime 〈;〉
@@ -318,17 +383,25 @@ arithexprprime -> ⋅ 〈;〉
 reduces:
 t";" r 21
 gotos:
-I_28 -- t"+" --> I_39
-I_28 -- t"-" --> I_40
-I_28 -- nt"arithexprprime" --> I_41
+I_31 -- t"+" --> I_56
+I_31 -- t"-" --> I_57
+I_31 -- nt"arithexprprime" --> I_58
 
-I_29:
+I_32:
 multexpr -> simpleexpr ⋅ multexprprime 〈+, -, ;〉
+multexprprime -> ⋅ * simpleexpr multexprprime 〈+, -, ;〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈+, -, ;〉
+multexprprime -> ⋅ 〈+, -, ;〉
 reduces:
+t"+" r 25
+t"-" r 25
+t";" r 25
 gotos:
-I_29 -- t"multexprprime" --> I_49
+I_32 -- t"*" --> I_59
+I_32 -- t"/" --> I_60
+I_32 -- nt"multexprprime" --> I_61
 
-I_30:
+I_33:
 compoundstmt -> { stmts } ⋅ 〈{, }, ID, if, while〉
 reduces:
 t"{" r 6
@@ -338,13 +411,140 @@ t"if" r 6
 t"while" r 6
 gotos:
 
-I_31:
+I_34:
 whilestmt -> while ( boolexpr ⋅ ) stmt 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_31 -- t")" --> I_48
+I_34 -- t")" --> I_55
 
-I_32:
+I_35:
+assgstmt -> ID = arithexpr ; ⋅ 〈{, }, ID, if, while〉
+reduces:
+t"{" r 11
+t"}" r 11
+t"ID" r 11
+t"if" r 11
+t"while" r 11
+gotos:
+
+I_36:
+arithexpr -> ⋅ multexpr arithexprprime 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ( ⋅ arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ⋅ ID 〈), *, +, -, /〉
+simpleexpr -> ⋅ NUM 〈), *, +, -, /〉
+reduces:
+gotos:
+I_36 -- nt"arithexpr" --> I_64
+
+I_37:
+simpleexpr -> ID ⋅ 〈), *, +, -, /〉
+reduces:
+t")" r 26
+t"*" r 26
+t"+" r 26
+t"-" r 26
+t"/" r 26
+gotos:
+
+I_38:
+simpleexpr -> NUM ⋅ 〈), *, +, -, /〉
+reduces:
+t")" r 27
+t"*" r 27
+t"+" r 27
+t"-" r 27
+t"/" r 27
+gotos:
+
+I_39:
+simpleexpr -> ( arithexpr ⋅ ) 〈*, +, -, /, ;〉
+reduces:
+gotos:
+I_39 -- t")" --> I_77
+
+I_40:
+arithexpr -> multexpr ⋅ arithexprprime 〈)〉
+arithexprprime -> ⋅ + multexpr arithexprprime 〈)〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈)〉
+arithexprprime -> ⋅ 〈)〉
+reduces:
+t")" r 21
+gotos:
+I_40 -- t"+" --> I_73
+I_40 -- t"-" --> I_74
+I_40 -- nt"arithexprprime" --> I_75
+
+I_41:
+multexpr -> simpleexpr ⋅ multexprprime 〈), +, -〉
+multexprprime -> ⋅ * simpleexpr multexprprime 〈), +, -〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈), +, -〉
+multexprprime -> ⋅ 〈), +, -〉
+reduces:
+t")" r 25
+t"+" r 25
+t"-" r 25
+gotos:
+I_41 -- t"*" --> I_79
+I_41 -- t"/" --> I_80
+I_41 -- nt"multexprprime" --> I_81
+
+I_42:
+arithexprprime -> + ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, <, >, <=, ==, >=〉
+reduces:
+gotos:
+I_42 -- nt"multexpr" --> I_71
+
+I_43:
+arithexprprime -> - ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, <, >, <=, ==, >=〉
+reduces:
+gotos:
+I_43 -- nt"multexpr" --> I_68
+
+I_44:
+arithexpr -> multexpr arithexprprime ⋅ 〈<, >, <=, ==, >=〉
+reduces:
+t"<" r 18
+t">" r 18
+t"<=" r 18
+t"==" r 18
+t">=" r 18
+gotos:
+
+I_45:
+ifstmt -> if ( boolexpr ) ⋅ then stmt else stmt 〈{, }, ID, if, while〉
+reduces:
+gotos:
+I_45 -- t"then" --> I_70
+
+I_46:
+multexprprime -> * ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, <, >, <=, ==, >=〉
+reduces:
+gotos:
+I_46 -- nt"simpleexpr" --> I_69
+
+I_47:
+multexprprime -> / ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, <, >, <=, ==, >=〉
+reduces:
+gotos:
+I_47 -- nt"simpleexpr" --> I_67
+
+I_48:
 multexpr -> simpleexpr multexprprime ⋅ 〈+, -, <, >, <=, ==, >=〉
 reduces:
 t"+" r 22
@@ -356,87 +556,7 @@ t"==" r 22
 t">=" r 22
 gotos:
 
-I_33:
-arithexprprime -> + ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
-multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
-reduces:
-gotos:
-I_33 -- nt"multexpr" --> I_54
-
-I_34:
-arithexprprime -> - ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
-multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
-reduces:
-gotos:
-I_34 -- nt"multexpr" --> I_55
-
-I_35:
-arithexpr -> multexpr arithexprprime ⋅ 〈<, >, <=, ==, >=〉
-reduces:
-t"<" r 18
-t">" r 18
-t"<=" r 18
-t"==" r 18
-t">=" r 18
-gotos:
-
-I_36:
-simpleexpr -> ( arithexpr ⋅ ) 〈multexprprime〉
-reduces:
-gotos:
-I_36 -- t")" --> I_60
-
-I_37:
-arithexpr -> multexpr ⋅ arithexprprime 〈)〉
-arithexprprime -> ⋅ + multexpr arithexprprime 〈)〉
-arithexprprime -> ⋅ - multexpr arithexprprime 〈)〉
-arithexprprime -> ⋅ 〈)〉
-reduces:
-t")" r 21
-gotos:
-I_37 -- t"+" --> I_56
-I_37 -- t"-" --> I_57
-I_37 -- nt"arithexprprime" --> I_58
-
-I_38:
-multexpr -> simpleexpr ⋅ multexprprime 〈), +, -〉
-reduces:
-gotos:
-I_38 -- t"multexprprime" --> I_59
-
-I_39:
-arithexprprime -> + ⋅ multexpr arithexprprime 〈;〉
-multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
-reduces:
-gotos:
-I_39 -- nt"multexpr" --> I_53
-
-I_40:
-arithexprprime -> - ⋅ multexpr arithexprprime 〈;〉
-multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
-reduces:
-gotos:
-I_40 -- nt"multexpr" --> I_61
-
-I_41:
-arithexpr -> multexpr arithexprprime ⋅ 〈;〉
-reduces:
-t";" r 18
-gotos:
-
-I_42:
+I_49:
 boolop -> < ⋅ 〈(, ID, NUM〉
 reduces:
 t"(" r 13
@@ -444,7 +564,7 @@ t"ID" r 13
 t"NUM" r 13
 gotos:
 
-I_43:
+I_50:
 boolop -> > ⋅ 〈(, ID, NUM〉
 reduces:
 t"(" r 14
@@ -452,7 +572,7 @@ t"ID" r 14
 t"NUM" r 14
 gotos:
 
-I_44:
+I_51:
 boolop -> <= ⋅ 〈(, ID, NUM〉
 reduces:
 t"(" r 15
@@ -460,7 +580,7 @@ t"ID" r 15
 t"NUM" r 15
 gotos:
 
-I_45:
+I_52:
 boolop -> == ⋅ 〈(, ID, NUM〉
 reduces:
 t"(" r 17
@@ -468,7 +588,7 @@ t"ID" r 17
 t"NUM" r 17
 gotos:
 
-I_46:
+I_53:
 boolop -> >= ⋅ 〈(, ID, NUM〉
 reduces:
 t"(" r 16
@@ -476,18 +596,18 @@ t"ID" r 16
 t"NUM" r 16
 gotos:
 
-I_47:
+I_54:
 arithexpr -> ⋅ multexpr arithexprprime 〈)〉
 boolexpr -> arithexpr boolop ⋅ arithexpr 〈)〉
 multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
+simpleexpr -> ⋅ ( arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ⋅ ID 〈), *, +, -, /〉
+simpleexpr -> ⋅ NUM 〈), *, +, -, /〉
 reduces:
 gotos:
-I_47 -- nt"arithexpr" --> I_63
+I_54 -- nt"arithexpr" --> I_66
 
-I_48:
+I_55:
 assgstmt -> ⋅ ID = arithexpr ; 〈{, }, ID, if, while〉
 compoundstmt -> ⋅ { stmts } 〈{, }, ID, if, while〉
 ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈{, }, ID, if, while〉
@@ -499,9 +619,53 @@ whilestmt -> ⋅ while ( boolexpr ) stmt 〈{, }, ID, if, while〉
 whilestmt -> while ( boolexpr ) ⋅ stmt 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_48 -- nt"stmt" --> I_52
+I_55 -- nt"stmt" --> I_72
 
-I_49:
+I_56:
+arithexprprime -> + ⋅ multexpr arithexprprime 〈;〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, ;〉
+reduces:
+gotos:
+I_56 -- nt"multexpr" --> I_63
+
+I_57:
+arithexprprime -> - ⋅ multexpr arithexprprime 〈;〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, ;〉
+reduces:
+gotos:
+I_57 -- nt"multexpr" --> I_65
+
+I_58:
+arithexpr -> multexpr arithexprprime ⋅ 〈;〉
+reduces:
+t";" r 18
+gotos:
+
+I_59:
+multexprprime -> * ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, ;〉
+reduces:
+gotos:
+I_59 -- nt"simpleexpr" --> I_82
+
+I_60:
+multexprprime -> / ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, ;〉
+reduces:
+gotos:
+I_60 -- nt"simpleexpr" --> I_78
+
+I_61:
 multexpr -> simpleexpr multexprprime ⋅ 〈+, -, ;〉
 reduces:
 t"+" r 22
@@ -509,33 +673,13 @@ t"-" r 22
 t";" r 22
 gotos:
 
-I_50:
-assgstmt -> ID = arithexpr ; ⋅ 〈{, }, ID, if, while〉
-reduces:
-t"{" r 11
-t"}" r 11
-t"ID" r 11
-t"if" r 11
-t"while" r 11
-gotos:
-
-I_51:
-ifstmt -> if ( boolexpr ) ⋅ then stmt else stmt 〈{, }, ID, if, while〉
+I_62:
+simpleexpr -> ( arithexpr ⋅ ) 〈*, +, -, /, <, >, <=, ==, >=〉
 reduces:
 gotos:
-I_51 -- t"then" --> I_62
+I_62 -- t")" --> I_76
 
-I_52:
-whilestmt -> while ( boolexpr ) stmt ⋅ 〈{, }, ID, if, while〉
-reduces:
-t"{" r 10
-t"}" r 10
-t"ID" r 10
-t"if" r 10
-t"while" r 10
-gotos:
-
-I_53:
+I_63:
 arithexprprime -> ⋅ + multexpr arithexprprime 〈;〉
 arithexprprime -> + multexpr ⋅ arithexprprime 〈;〉
 arithexprprime -> ⋅ - multexpr arithexprprime 〈;〉
@@ -543,23 +687,47 @@ arithexprprime -> ⋅ 〈;〉
 reduces:
 t";" r 21
 gotos:
-I_53 -- nt"arithexprprime" --> I_77
+I_63 -- nt"arithexprprime" --> I_99
 
-I_54:
-arithexprprime -> ⋅ + multexpr arithexprprime 〈<, >, <=, ==, >=〉
-arithexprprime -> + multexpr ⋅ arithexprprime 〈<, >, <=, ==, >=〉
-arithexprprime -> ⋅ - multexpr arithexprprime 〈<, >, <=, ==, >=〉
-arithexprprime -> ⋅ 〈<, >, <=, ==, >=〉
+I_64:
+simpleexpr -> ( arithexpr ⋅ ) 〈), *, +, -, /〉
 reduces:
-t"<" r 21
-t">" r 21
-t"<=" r 21
-t"==" r 21
-t">=" r 21
 gotos:
-I_54 -- nt"arithexprprime" --> I_67
+I_64 -- t")" --> I_83
 
-I_55:
+I_65:
+arithexprprime -> ⋅ + multexpr arithexprprime 〈;〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈;〉
+arithexprprime -> - multexpr ⋅ arithexprprime 〈;〉
+arithexprprime -> ⋅ 〈;〉
+reduces:
+t";" r 21
+gotos:
+I_65 -- nt"arithexprprime" --> I_101
+
+I_66:
+boolexpr -> arithexpr boolop arithexpr ⋅ 〈)〉
+reduces:
+t")" r 12
+gotos:
+
+I_67:
+multexprprime -> ⋅ * simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> / simpleexpr ⋅ multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> ⋅ 〈+, -, <, >, <=, ==, >=〉
+reduces:
+t"+" r 25
+t"-" r 25
+t"<" r 25
+t">" r 25
+t"<=" r 25
+t"==" r 25
+t">=" r 25
+gotos:
+I_67 -- nt"multexprprime" --> I_104
+
+I_68:
 arithexprprime -> ⋅ + multexpr arithexprprime 〈<, >, <=, ==, >=〉
 arithexprprime -> ⋅ - multexpr arithexprprime 〈<, >, <=, ==, >=〉
 arithexprprime -> - multexpr ⋅ arithexprprime 〈<, >, <=, ==, >=〉
@@ -571,59 +739,25 @@ t"<=" r 21
 t"==" r 21
 t">=" r 21
 gotos:
-I_55 -- nt"arithexprprime" --> I_65
+I_68 -- nt"arithexprprime" --> I_84
 
-I_56:
-arithexprprime -> + ⋅ multexpr arithexprprime 〈)〉
-multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
+I_69:
+multexprprime -> ⋅ * simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> * simpleexpr ⋅ multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
+multexprprime -> ⋅ 〈+, -, <, >, <=, ==, >=〉
 reduces:
+t"+" r 25
+t"-" r 25
+t"<" r 25
+t">" r 25
+t"<=" r 25
+t"==" r 25
+t">=" r 25
 gotos:
-I_56 -- nt"multexpr" --> I_78
+I_69 -- nt"multexprprime" --> I_98
 
-I_57:
-arithexprprime -> - ⋅ multexpr arithexprprime 〈)〉
-multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
-reduces:
-gotos:
-I_57 -- nt"multexpr" --> I_66
-
-I_58:
-arithexpr -> multexpr arithexprprime ⋅ 〈)〉
-reduces:
-t")" r 18
-gotos:
-
-I_59:
-multexpr -> simpleexpr multexprprime ⋅ 〈), +, -〉
-reduces:
-t")" r 22
-t"+" r 22
-t"-" r 22
-gotos:
-
-I_60:
-simpleexpr -> ( arithexpr ) ⋅ 〈multexprprime〉
-reduces:
-t"multexprprime" r 28
-gotos:
-
-I_61:
-arithexprprime -> ⋅ + multexpr arithexprprime 〈;〉
-arithexprprime -> ⋅ - multexpr arithexprprime 〈;〉
-arithexprprime -> - multexpr ⋅ arithexprprime 〈;〉
-arithexprprime -> ⋅ 〈;〉
-reduces:
-t";" r 21
-gotos:
-I_61 -- nt"arithexprprime" --> I_64
-
-I_62:
+I_70:
 assgstmt -> ⋅ ID = arithexpr ; 〈else〉
 compoundstmt -> ⋅ { stmts } 〈else〉
 ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈else〉
@@ -635,29 +769,151 @@ stmt -> ⋅ whilestmt 〈else〉
 whilestmt -> ⋅ while ( boolexpr ) stmt 〈else〉
 reduces:
 gotos:
-I_62 -- t"{" --> I_68
-I_62 -- t"ID" --> I_69
-I_62 -- t"if" --> I_70
-I_62 -- t"while" --> I_71
-I_62 -- nt"assgstmt" --> I_72
-I_62 -- nt"compoundstmt" --> I_73
-I_62 -- nt"ifstmt" --> I_74
-I_62 -- nt"stmt" --> I_75
-I_62 -- nt"whilestmt" --> I_76
+I_70 -- t"{" --> I_88
+I_70 -- t"ID" --> I_89
+I_70 -- t"if" --> I_90
+I_70 -- t"while" --> I_91
+I_70 -- nt"assgstmt" --> I_92
+I_70 -- nt"compoundstmt" --> I_93
+I_70 -- nt"ifstmt" --> I_94
+I_70 -- nt"stmt" --> I_95
+I_70 -- nt"whilestmt" --> I_96
 
-I_63:
-boolexpr -> arithexpr boolop arithexpr ⋅ 〈)〉
+I_71:
+arithexprprime -> ⋅ + multexpr arithexprprime 〈<, >, <=, ==, >=〉
+arithexprprime -> + multexpr ⋅ arithexprprime 〈<, >, <=, ==, >=〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈<, >, <=, ==, >=〉
+arithexprprime -> ⋅ 〈<, >, <=, ==, >=〉
 reduces:
-t")" r 12
+t"<" r 21
+t">" r 21
+t"<=" r 21
+t"==" r 21
+t">=" r 21
+gotos:
+I_71 -- nt"arithexprprime" --> I_100
+
+I_72:
+whilestmt -> while ( boolexpr ) stmt ⋅ 〈{, }, ID, if, while〉
+reduces:
+t"{" r 10
+t"}" r 10
+t"ID" r 10
+t"if" r 10
+t"while" r 10
 gotos:
 
-I_64:
-arithexprprime -> - multexpr arithexprprime ⋅ 〈;〉
+I_73:
+arithexprprime -> + ⋅ multexpr arithexprprime 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ⋅ ID 〈), *, +, -, /〉
+simpleexpr -> ⋅ NUM 〈), *, +, -, /〉
 reduces:
-t";" r 20
+gotos:
+I_73 -- nt"multexpr" --> I_103
+
+I_74:
+arithexprprime -> - ⋅ multexpr arithexprprime 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ⋅ ID 〈), *, +, -, /〉
+simpleexpr -> ⋅ NUM 〈), *, +, -, /〉
+reduces:
+gotos:
+I_74 -- nt"multexpr" --> I_85
+
+I_75:
+arithexpr -> multexpr arithexprprime ⋅ 〈)〉
+reduces:
+t")" r 18
 gotos:
 
-I_65:
+I_76:
+simpleexpr -> ( arithexpr ) ⋅ 〈*, +, -, /, <, >, <=, ==, >=〉
+reduces:
+t"*" r 28
+t"+" r 28
+t"-" r 28
+t"/" r 28
+t"<" r 28
+t">" r 28
+t"<=" r 28
+t"==" r 28
+t">=" r 28
+gotos:
+
+I_77:
+simpleexpr -> ( arithexpr ) ⋅ 〈*, +, -, /, ;〉
+reduces:
+t"*" r 28
+t"+" r 28
+t"-" r 28
+t"/" r 28
+t";" r 28
+gotos:
+
+I_78:
+multexprprime -> ⋅ * simpleexpr multexprprime 〈+, -, ;〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈+, -, ;〉
+multexprprime -> / simpleexpr ⋅ multexprprime 〈+, -, ;〉
+multexprprime -> ⋅ 〈+, -, ;〉
+reduces:
+t"+" r 25
+t"-" r 25
+t";" r 25
+gotos:
+I_78 -- nt"multexprprime" --> I_97
+
+I_79:
+multexprprime -> * ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ⋅ ID 〈), *, +, -, /〉
+simpleexpr -> ⋅ NUM 〈), *, +, -, /〉
+reduces:
+gotos:
+I_79 -- nt"simpleexpr" --> I_87
+
+I_80:
+multexprprime -> / ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈), *, +, -, /〉
+simpleexpr -> ⋅ ID 〈), *, +, -, /〉
+simpleexpr -> ⋅ NUM 〈), *, +, -, /〉
+reduces:
+gotos:
+I_80 -- nt"simpleexpr" --> I_102
+
+I_81:
+multexpr -> simpleexpr multexprprime ⋅ 〈), +, -〉
+reduces:
+t")" r 22
+t"+" r 22
+t"-" r 22
+gotos:
+
+I_82:
+multexprprime -> ⋅ * simpleexpr multexprprime 〈+, -, ;〉
+multexprprime -> * simpleexpr ⋅ multexprprime 〈+, -, ;〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈+, -, ;〉
+multexprprime -> ⋅ 〈+, -, ;〉
+reduces:
+t"+" r 25
+t"-" r 25
+t";" r 25
+gotos:
+I_82 -- nt"multexprprime" --> I_86
+
+I_83:
+simpleexpr -> ( arithexpr ) ⋅ 〈), *, +, -, /〉
+reduces:
+t")" r 28
+t"*" r 28
+t"+" r 28
+t"-" r 28
+t"/" r 28
+gotos:
+
+I_84:
 arithexprprime -> - multexpr arithexprprime ⋅ 〈<, >, <=, ==, >=〉
 reduces:
 t"<" r 20
@@ -667,7 +923,7 @@ t"==" r 20
 t">=" r 20
 gotos:
 
-I_66:
+I_85:
 arithexprprime -> ⋅ + multexpr arithexprprime 〈)〉
 arithexprprime -> ⋅ - multexpr arithexprprime 〈)〉
 arithexprprime -> - multexpr ⋅ arithexprprime 〈)〉
@@ -675,19 +931,29 @@ arithexprprime -> ⋅ 〈)〉
 reduces:
 t")" r 21
 gotos:
-I_66 -- nt"arithexprprime" --> I_79
+I_85 -- nt"arithexprprime" --> I_107
 
-I_67:
-arithexprprime -> + multexpr arithexprprime ⋅ 〈<, >, <=, ==, >=〉
+I_86:
+multexprprime -> * simpleexpr multexprprime ⋅ 〈+, -, ;〉
 reduces:
-t"<" r 19
-t">" r 19
-t"<=" r 19
-t"==" r 19
-t">=" r 19
+t"+" r 23
+t"-" r 23
+t";" r 23
 gotos:
 
-I_68:
+I_87:
+multexprprime -> ⋅ * simpleexpr multexprprime 〈), +, -〉
+multexprprime -> * simpleexpr ⋅ multexprprime 〈), +, -〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈), +, -〉
+multexprprime -> ⋅ 〈), +, -〉
+reduces:
+t")" r 25
+t"+" r 25
+t"-" r 25
+gotos:
+I_87 -- nt"multexprprime" --> I_110
+
+I_88:
 assgstmt -> ⋅ ID = arithexpr ; 〈{, }, ID, if, while〉
 compoundstmt -> ⋅ { stmts } 〈{, }, ID, if, while〉
 compoundstmt -> { ⋅ stmts } 〈else〉
@@ -702,63 +968,111 @@ whilestmt -> ⋅ while ( boolexpr ) stmt 〈{, }, ID, if, while〉
 reduces:
 t"}" r 8
 gotos:
-I_68 -- nt"stmts" --> I_83
+I_88 -- nt"stmts" --> I_111
 
-I_69:
+I_89:
 assgstmt -> ID ⋅ = arithexpr ; 〈else〉
 reduces:
 gotos:
-I_69 -- t"=" --> I_80
+I_89 -- t"=" --> I_113
 
-I_70:
+I_90:
 ifstmt -> if ⋅ ( boolexpr ) then stmt else stmt 〈else〉
 reduces:
 gotos:
-I_70 -- t"(" --> I_82
+I_90 -- t"(" --> I_105
 
-I_71:
+I_91:
 whilestmt -> while ⋅ ( boolexpr ) stmt 〈else〉
 reduces:
 gotos:
-I_71 -- t"(" --> I_85
+I_91 -- t"(" --> I_109
 
-I_72:
+I_92:
 stmt -> assgstmt ⋅ 〈else〉
 reduces:
 t"else" r 4
 gotos:
 
-I_73:
+I_93:
 stmt -> compoundstmt ⋅ 〈else〉
 reduces:
 t"else" r 5
 gotos:
 
-I_74:
+I_94:
 stmt -> ifstmt ⋅ 〈else〉
 reduces:
 t"else" r 2
 gotos:
 
-I_75:
+I_95:
 ifstmt -> if ( boolexpr ) then stmt ⋅ else stmt 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_75 -- t"else" --> I_84
+I_95 -- t"else" --> I_106
 
-I_76:
+I_96:
 stmt -> whilestmt ⋅ 〈else〉
 reduces:
 t"else" r 3
 gotos:
 
-I_77:
+I_97:
+multexprprime -> / simpleexpr multexprprime ⋅ 〈+, -, ;〉
+reduces:
+t"+" r 24
+t"-" r 24
+t";" r 24
+gotos:
+
+I_98:
+multexprprime -> * simpleexpr multexprprime ⋅ 〈+, -, <, >, <=, ==, >=〉
+reduces:
+t"+" r 23
+t"-" r 23
+t"<" r 23
+t">" r 23
+t"<=" r 23
+t"==" r 23
+t">=" r 23
+gotos:
+
+I_99:
 arithexprprime -> + multexpr arithexprprime ⋅ 〈;〉
 reduces:
 t";" r 19
 gotos:
 
-I_78:
+I_100:
+arithexprprime -> + multexpr arithexprprime ⋅ 〈<, >, <=, ==, >=〉
+reduces:
+t"<" r 19
+t">" r 19
+t"<=" r 19
+t"==" r 19
+t">=" r 19
+gotos:
+
+I_101:
+arithexprprime -> - multexpr arithexprprime ⋅ 〈;〉
+reduces:
+t";" r 20
+gotos:
+
+I_102:
+multexprprime -> ⋅ * simpleexpr multexprprime 〈), +, -〉
+multexprprime -> ⋅ / simpleexpr multexprprime 〈), +, -〉
+multexprprime -> / simpleexpr ⋅ multexprprime 〈), +, -〉
+multexprprime -> ⋅ 〈), +, -〉
+reduces:
+t")" r 25
+t"+" r 25
+t"-" r 25
+gotos:
+I_102 -- nt"multexprprime" --> I_112
+
+I_103:
 arithexprprime -> ⋅ + multexpr arithexprprime 〈)〉
 arithexprprime -> + multexpr ⋅ arithexprprime 〈)〉
 arithexprprime -> ⋅ - multexpr arithexprprime 〈)〉
@@ -766,50 +1080,33 @@ arithexprprime -> ⋅ 〈)〉
 reduces:
 t")" r 21
 gotos:
-I_78 -- nt"arithexprprime" --> I_81
+I_103 -- nt"arithexprprime" --> I_108
 
-I_79:
-arithexprprime -> - multexpr arithexprprime ⋅ 〈)〉
+I_104:
+multexprprime -> / simpleexpr multexprprime ⋅ 〈+, -, <, >, <=, ==, >=〉
 reduces:
-t")" r 20
+t"+" r 24
+t"-" r 24
+t"<" r 24
+t">" r 24
+t"<=" r 24
+t"==" r 24
+t">=" r 24
 gotos:
 
-I_80:
-arithexpr -> ⋅ multexpr arithexprprime 〈;〉
-assgstmt -> ID = ⋅ arithexpr ; 〈else〉
-multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
-reduces:
-gotos:
-I_80 -- nt"arithexpr" --> I_86
-
-I_81:
-arithexprprime -> + multexpr arithexprprime ⋅ 〈)〉
-reduces:
-t")" r 19
-gotos:
-
-I_82:
+I_105:
 arithexpr -> ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
 boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
 ifstmt -> if ( ⋅ boolexpr ) then stmt else stmt 〈else〉
 multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, <, >, <=, ==, >=〉
 reduces:
 gotos:
-I_82 -- nt"boolexpr" --> I_89
+I_105 -- nt"boolexpr" --> I_116
 
-I_83:
-compoundstmt -> { stmts ⋅ } 〈else〉
-reduces:
-gotos:
-I_83 -- t"}" --> I_90
-
-I_84:
+I_106:
 assgstmt -> ⋅ ID = arithexpr ; 〈{, }, ID, if, while〉
 compoundstmt -> ⋅ { stmts } 〈{, }, ID, if, while〉
 ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈{, }, ID, if, while〉
@@ -821,27 +1118,90 @@ stmt -> ⋅ whilestmt 〈{, }, ID, if, while〉
 whilestmt -> ⋅ while ( boolexpr ) stmt 〈{, }, ID, if, while〉
 reduces:
 gotos:
-I_84 -- nt"stmt" --> I_87
+I_106 -- nt"stmt" --> I_118
 
-I_85:
+I_107:
+arithexprprime -> - multexpr arithexprprime ⋅ 〈)〉
+reduces:
+t")" r 20
+gotos:
+
+I_108:
+arithexprprime -> + multexpr arithexprprime ⋅ 〈)〉
+reduces:
+t")" r 19
+gotos:
+
+I_109:
 arithexpr -> ⋅ multexpr arithexprprime 〈<, >, <=, ==, >=〉
 boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
 multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, >, <=, ==, >=〉
-simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
-simpleexpr -> ⋅ ID 〈multexprprime〉
-simpleexpr -> ⋅ NUM 〈multexprprime〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, <, >, <=, ==, >=〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, <, >, <=, ==, >=〉
 whilestmt -> while ( ⋅ boolexpr ) stmt 〈else〉
 reduces:
 gotos:
-I_85 -- nt"boolexpr" --> I_88
+I_109 -- nt"boolexpr" --> I_114
 
-I_86:
+I_110:
+multexprprime -> * simpleexpr multexprprime ⋅ 〈), +, -〉
+reduces:
+t")" r 23
+t"+" r 23
+t"-" r 23
+gotos:
+
+I_111:
+compoundstmt -> { stmts ⋅ } 〈else〉
+reduces:
+gotos:
+I_111 -- t"}" --> I_117
+
+I_112:
+multexprprime -> / simpleexpr multexprprime ⋅ 〈), +, -〉
+reduces:
+t")" r 24
+t"+" r 24
+t"-" r 24
+gotos:
+
+I_113:
+arithexpr -> ⋅ multexpr arithexprprime 〈;〉
+assgstmt -> ID = ⋅ arithexpr ; 〈else〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ ID 〈*, +, -, /, ;〉
+simpleexpr -> ⋅ NUM 〈*, +, -, /, ;〉
+reduces:
+gotos:
+I_113 -- nt"arithexpr" --> I_115
+
+I_114:
+whilestmt -> while ( boolexpr ⋅ ) stmt 〈else〉
+reduces:
+gotos:
+I_114 -- t")" --> I_120
+
+I_115:
 assgstmt -> ID = arithexpr ⋅ ; 〈else〉
 reduces:
 gotos:
-I_86 -- t";" --> I_93
+I_115 -- t";" --> I_119
 
-I_87:
+I_116:
+ifstmt -> if ( boolexpr ⋅ ) then stmt else stmt 〈else〉
+reduces:
+gotos:
+I_116 -- t")" --> I_121
+
+I_117:
+compoundstmt -> { stmts } ⋅ 〈else〉
+reduces:
+t"else" r 6
+gotos:
+
+I_118:
 ifstmt -> if ( boolexpr ) then stmt else stmt ⋅ 〈{, }, ID, if, while〉
 reduces:
 t"{" r 9
@@ -851,31 +1211,13 @@ t"if" r 9
 t"while" r 9
 gotos:
 
-I_88:
-whilestmt -> while ( boolexpr ⋅ ) stmt 〈else〉
+I_119:
+assgstmt -> ID = arithexpr ; ⋅ 〈else〉
 reduces:
-gotos:
-I_88 -- t")" --> I_92
-
-I_89:
-ifstmt -> if ( boolexpr ⋅ ) then stmt else stmt 〈else〉
-reduces:
-gotos:
-I_89 -- t")" --> I_91
-
-I_90:
-compoundstmt -> { stmts } ⋅ 〈else〉
-reduces:
-t"else" r 6
+t"else" r 11
 gotos:
 
-I_91:
-ifstmt -> if ( boolexpr ) ⋅ then stmt else stmt 〈else〉
-reduces:
-gotos:
-I_91 -- t"then" --> I_95
-
-I_92:
+I_120:
 assgstmt -> ⋅ ID = arithexpr ; 〈else〉
 compoundstmt -> ⋅ { stmts } 〈else〉
 ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈else〉
@@ -887,21 +1229,15 @@ whilestmt -> ⋅ while ( boolexpr ) stmt 〈else〉
 whilestmt -> while ( boolexpr ) ⋅ stmt 〈else〉
 reduces:
 gotos:
-I_92 -- nt"stmt" --> I_94
+I_120 -- nt"stmt" --> I_123
 
-I_93:
-assgstmt -> ID = arithexpr ; ⋅ 〈else〉
+I_121:
+ifstmt -> if ( boolexpr ) ⋅ then stmt else stmt 〈else〉
 reduces:
-t"else" r 11
 gotos:
+I_121 -- t"then" --> I_122
 
-I_94:
-whilestmt -> while ( boolexpr ) stmt ⋅ 〈else〉
-reduces:
-t"else" r 10
-gotos:
-
-I_95:
+I_122:
 assgstmt -> ⋅ ID = arithexpr ; 〈else〉
 compoundstmt -> ⋅ { stmts } 〈else〉
 ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈else〉
@@ -913,15 +1249,21 @@ stmt -> ⋅ whilestmt 〈else〉
 whilestmt -> ⋅ while ( boolexpr ) stmt 〈else〉
 reduces:
 gotos:
-I_95 -- nt"stmt" --> I_96
+I_122 -- nt"stmt" --> I_124
 
-I_96:
+I_123:
+whilestmt -> while ( boolexpr ) stmt ⋅ 〈else〉
+reduces:
+t"else" r 10
+gotos:
+
+I_124:
 ifstmt -> if ( boolexpr ) then stmt ⋅ else stmt 〈else〉
 reduces:
 gotos:
-I_96 -- t"else" --> I_97
+I_124 -- t"else" --> I_125
 
-I_97:
+I_125:
 assgstmt -> ⋅ ID = arithexpr ; 〈else〉
 compoundstmt -> ⋅ { stmts } 〈else〉
 ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈else〉
@@ -933,112 +1275,140 @@ stmt -> ⋅ whilestmt 〈else〉
 whilestmt -> ⋅ while ( boolexpr ) stmt 〈else〉
 reduces:
 gotos:
-I_97 -- nt"stmt" --> I_98
+I_125 -- nt"stmt" --> I_126
 
-I_98:
+I_126:
 ifstmt -> if ( boolexpr ) then stmt else stmt ⋅ 〈else〉
 reduces:
 t"else" r 9
 gotos:
 
-| | `(` | `)` | `*` | `+` | `-` | `/` | `;` | `<` | `=` | `>` | `{` | `}` | `<=` | `==` | `>=` | `ID` | `if` | `NUM` | `else` | `then` | `while` | `multexprprime` | `E` | `eof` | `arithexpr` | `arithexprprime` | `assgstmt` | `boolexpr` | `boolop` | `compoundstmt` | `ifstmt` | `multex_prprime` | `multexpr` | `program` | `programprime` | `simpleexpr` | `stmt` | `stmts` | `whilestmt` |
-| - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
-| $I_{0}$ |  |  |  |  |  |  |  |  |  |  | s1 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 2 |  |  |  | 3 |  |  |  |  |  |
-| $I_{1}$ |  |  |  |  |  |  |  |  |  |  | s4 | r8 |  |  |  | s5 | s6 |  |  |  | s7 |  |  |  |  |  | 8 |  |  | 9 | 10 |  |  |  |  |  | 11 | 12 | 13 |
-| $I_{2}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r1 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{3}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | acc |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{4}$ |  |  |  |  |  |  |  |  |  |  |  | r8 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 14 |  |
-| $I_{5}$ |  |  |  |  |  |  |  |  | s16 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{6}$ | s15 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{7}$ | s18 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{8}$ |  |  |  |  |  |  |  |  |  |  | r4 | r4 |  |  |  | r4 | r4 |  |  |  | r4 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{9}$ |  |  |  |  |  |  |  |  |  |  | r5 | r5 |  |  |  | r5 | r5 |  |  |  | r5 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{10}$ |  |  |  |  |  |  |  |  |  |  | r2 | r2 |  |  |  | r2 | r2 |  |  |  | r2 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{11}$ |  |  |  |  |  |  |  |  |  |  |  | r8 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 17 |  |
-| $I_{12}$ |  |  |  |  |  |  |  |  |  |  |  | s19 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{13}$ |  |  |  |  |  |  |  |  |  |  | r3 | r3 |  |  |  | r3 | r3 |  |  |  | r3 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{14}$ |  |  |  |  |  |  |  |  |  |  |  | s30 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{15}$ | s20 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s21 |  | s22 |  |  |  |  |  |  | 23 |  |  | 24 |  |  |  |  | 25 |  |  | 26 |  |  |  |
-| $I_{16}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 27 |  |  |  |  |  |  |  | 28 |  |  | 29 |  |  |  |
-| $I_{17}$ |  |  |  |  |  |  |  |  |  |  |  | r7 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{18}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 31 |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{19}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r6 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{20}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 36 |  |  |  |  |  |  |  | 37 |  |  | 38 |  |  |  |
-| $I_{21}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r26 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{22}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r27 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{23}$ |  |  |  |  |  |  |  | s42 |  | s43 |  |  | s44 | s45 | s46 |  |  |  |  |  |  |  |  |  |  |  |  |  | 47 |  |  |  |  |  |  |  |  |  |  |
-| $I_{24}$ |  | s51 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{25}$ |  |  |  | s33 | s34 |  |  | r21 |  | r21 |  |  | r21 | r21 | r21 |  |  |  |  |  |  |  |  |  |  | 35 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{26}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s32 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{27}$ |  |  |  |  |  |  | s50 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{28}$ |  |  |  | s39 | s40 |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 41 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{29}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s49 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{30}$ |  |  |  |  |  |  |  |  |  |  | r6 | r6 |  |  |  | r6 | r6 |  |  |  | r6 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{31}$ |  | s48 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{32}$ |  |  |  | r22 | r22 |  |  | r22 |  | r22 |  |  | r22 | r22 | r22 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{33}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 54 |  |  |  |  |  |  |
-| $I_{34}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 55 |  |  |  |  |  |  |
-| $I_{35}$ |  |  |  |  |  |  |  | r18 |  | r18 |  |  | r18 | r18 | r18 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{36}$ |  | s60 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{37}$ |  | r21 |  | s56 | s57 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 58 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{38}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s59 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{39}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 53 |  |  |  |  |  |  |
-| $I_{40}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 61 |  |  |  |  |  |  |
-| $I_{41}$ |  |  |  |  |  |  | r18 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{42}$ | r13 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r13 |  | r13 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{43}$ | r14 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r14 |  | r14 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{44}$ | r15 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r15 |  | r15 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{45}$ | r17 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r17 |  | r17 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{46}$ | r16 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r16 |  | r16 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{47}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 63 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{48}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 52 |  |  |
-| $I_{49}$ |  |  |  | r22 | r22 |  | r22 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{50}$ |  |  |  |  |  |  |  |  |  |  | r11 | r11 |  |  |  | r11 | r11 |  |  |  | r11 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{51}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s62 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{52}$ |  |  |  |  |  |  |  |  |  |  | r10 | r10 |  |  |  | r10 | r10 |  |  |  | r10 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{53}$ |  |  |  |  |  |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 77 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{54}$ |  |  |  |  |  |  |  | r21 |  | r21 |  |  | r21 | r21 | r21 |  |  |  |  |  |  |  |  |  |  | 67 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{55}$ |  |  |  |  |  |  |  | r21 |  | r21 |  |  | r21 | r21 | r21 |  |  |  |  |  |  |  |  |  |  | 65 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{56}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 78 |  |  |  |  |  |  |
-| $I_{57}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 66 |  |  |  |  |  |  |
-| $I_{58}$ |  | r18 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{59}$ |  | r22 |  | r22 | r22 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{60}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r28 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{61}$ |  |  |  |  |  |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 64 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{62}$ |  |  |  |  |  |  |  |  |  |  | s68 |  |  |  |  | s69 | s70 |  |  |  | s71 |  |  |  |  |  | 72 |  |  | 73 | 74 |  |  |  |  |  | 75 |  | 76 |
-| $I_{63}$ |  | r12 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{64}$ |  |  |  |  |  |  | r20 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{65}$ |  |  |  |  |  |  |  | r20 |  | r20 |  |  | r20 | r20 | r20 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{66}$ |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 79 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{67}$ |  |  |  |  |  |  |  | r19 |  | r19 |  |  | r19 | r19 | r19 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{68}$ |  |  |  |  |  |  |  |  |  |  |  | r8 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 83 |  |
-| $I_{69}$ |  |  |  |  |  |  |  |  | s80 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{70}$ | s82 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{71}$ | s85 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{72}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r4 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{73}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r5 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{74}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r2 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{75}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s84 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{76}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r3 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{77}$ |  |  |  |  |  |  | r19 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{78}$ |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 81 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{79}$ |  | r20 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{80}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 86 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{81}$ |  | r19 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{82}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 89 |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{83}$ |  |  |  |  |  |  |  |  |  |  |  | s90 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{84}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 87 |  |  |
-| $I_{85}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 88 |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{86}$ |  |  |  |  |  |  | s93 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{87}$ |  |  |  |  |  |  |  |  |  |  | r9 | r9 |  |  |  | r9 | r9 |  |  |  | r9 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{88}$ |  | s92 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{89}$ |  | s91 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{90}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r6 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{91}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s95 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{92}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 94 |  |  |
-| $I_{93}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r11 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{94}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r10 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{95}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 96 |  |  |
-| $I_{96}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s97 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| $I_{97}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 98 |  |  |
-| $I_{98}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r9 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| | `(` | `)` | `*` | `+` | `-` | `/` | `;` | `<` | `=` | `>` | `{` | `}` | `<=` | `==` | `>=` | `ID` | `if` | `NUM` | `else` | `then` | `while` | `E` | `eof` | `arithexpr` | `arithexprprime` | `assgstmt` | `boolexpr` | `boolop` | `compoundstmt` | `ifstmt` | `multexpr` | `multexprprime` | `program` | `programprime` | `simpleexpr` | `stmt` | `stmts` | `whilestmt` |
+| - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - |
+| $I_{0}$ |  |  |  |  |  |  |  |  |  |  | s1 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 2 |  |  |  | 3 |  |  |  |  |  |
+| $I_{1}$ |  |  |  |  |  |  |  |  |  |  | s4 | r8 |  |  |  | s5 | s6 |  |  |  | s7 |  |  |  |  | 8 |  |  | 9 | 10 |  |  |  |  |  | 11 | 12 | 13 |
+| $I_{2}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r1 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{3}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | acc |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{4}$ |  |  |  |  |  |  |  |  |  |  |  | r8 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 19 |  |
+| $I_{5}$ |  |  |  |  |  |  |  |  | s18 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{6}$ | s14 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{7}$ | s15 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{8}$ |  |  |  |  |  |  |  |  |  |  | r4 | r4 |  |  |  | r4 | r4 |  |  |  | r4 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{9}$ |  |  |  |  |  |  |  |  |  |  | r5 | r5 |  |  |  | r5 | r5 |  |  |  | r5 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{10}$ |  |  |  |  |  |  |  |  |  |  | r2 | r2 |  |  |  | r2 | r2 |  |  |  | r2 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{11}$ |  |  |  |  |  |  |  |  |  |  |  | r8 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 17 |  |
+| $I_{12}$ |  |  |  |  |  |  |  |  |  |  |  | s16 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{13}$ |  |  |  |  |  |  |  |  |  |  | r3 | r3 |  |  |  | r3 | r3 |  |  |  | r3 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{14}$ | s20 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s21 |  | s22 |  |  |  |  |  | 23 |  |  | 24 |  |  |  | 25 |  |  |  | 26 |  |  |  |
+| $I_{15}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 34 |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{16}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r6 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{17}$ |  |  |  |  |  |  |  |  |  |  |  | r7 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{18}$ | s27 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s28 |  | s29 |  |  |  |  |  | 30 |  |  |  |  |  |  | 31 |  |  |  | 32 |  |  |  |
+| $I_{19}$ |  |  |  |  |  |  |  |  |  |  |  | s33 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{20}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 62 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{21}$ |  |  | r26 | r26 | r26 | r26 |  | r26 |  | r26 |  |  | r26 | r26 | r26 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{22}$ |  |  | r27 | r27 | r27 | r27 |  | r27 |  | r27 |  |  | r27 | r27 | r27 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{23}$ |  |  |  |  |  |  |  | s49 |  | s50 |  |  | s51 | s52 | s53 |  |  |  |  |  |  |  |  |  |  |  |  | 54 |  |  |  |  |  |  |  |  |  |  |
+| $I_{24}$ |  | s45 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{25}$ |  |  |  | s42 | s43 |  |  | r21 |  | r21 |  |  | r21 | r21 | r21 |  |  |  |  |  |  |  |  |  | 44 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{26}$ |  |  | s46 | r25 | r25 | s47 |  | r25 |  | r25 |  |  | r25 | r25 | r25 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 48 |  |  |  |  |  |  |
+| $I_{27}$ | s36 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s37 |  | s38 |  |  |  |  |  | 39 |  |  |  |  |  |  | 40 |  |  |  | 41 |  |  |  |
+| $I_{28}$ |  |  | r26 | r26 | r26 | r26 | r26 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{29}$ |  |  | r27 | r27 | r27 | r27 | r27 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{30}$ |  |  |  |  |  |  | s35 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{31}$ |  |  |  | s56 | s57 |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 58 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{32}$ |  |  | s59 | r25 | r25 | s60 | r25 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 61 |  |  |  |  |  |  |
+| $I_{33}$ |  |  |  |  |  |  |  |  |  |  | r6 | r6 |  |  |  | r6 | r6 |  |  |  | r6 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{34}$ |  | s55 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{35}$ |  |  |  |  |  |  |  |  |  |  | r11 | r11 |  |  |  | r11 | r11 |  |  |  | r11 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{36}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 64 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{37}$ |  | r26 | r26 | r26 | r26 | r26 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{38}$ |  | r27 | r27 | r27 | r27 | r27 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{39}$ |  | s77 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{40}$ |  | r21 |  | s73 | s74 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 75 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{41}$ |  | r25 | s79 | r25 | r25 | s80 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 81 |  |  |  |  |  |  |
+| $I_{42}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 71 |  |  |  |  |  |  |  |
+| $I_{43}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 68 |  |  |  |  |  |  |  |
+| $I_{44}$ |  |  |  |  |  |  |  | r18 |  | r18 |  |  | r18 | r18 | r18 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{45}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s70 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{46}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 69 |  |  |  |
+| $I_{47}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 67 |  |  |  |
+| $I_{48}$ |  |  |  | r22 | r22 |  |  | r22 |  | r22 |  |  | r22 | r22 | r22 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{49}$ | r13 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r13 |  | r13 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{50}$ | r14 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r14 |  | r14 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{51}$ | r15 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r15 |  | r15 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{52}$ | r17 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r17 |  | r17 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{53}$ | r16 |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r16 |  | r16 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{54}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 66 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{55}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 72 |  |  |
+| $I_{56}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 63 |  |  |  |  |  |  |  |
+| $I_{57}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 65 |  |  |  |  |  |  |  |
+| $I_{58}$ |  |  |  |  |  |  | r18 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{59}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 82 |  |  |  |
+| $I_{60}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 78 |  |  |  |
+| $I_{61}$ |  |  |  | r22 | r22 |  | r22 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{62}$ |  | s76 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{63}$ |  |  |  |  |  |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 99 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{64}$ |  | s83 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{65}$ |  |  |  |  |  |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 101 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{66}$ |  | r12 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{67}$ |  |  |  | r25 | r25 |  |  | r25 |  | r25 |  |  | r25 | r25 | r25 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 104 |  |  |  |  |  |  |
+| $I_{68}$ |  |  |  |  |  |  |  | r21 |  | r21 |  |  | r21 | r21 | r21 |  |  |  |  |  |  |  |  |  | 84 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{69}$ |  |  |  | r25 | r25 |  |  | r25 |  | r25 |  |  | r25 | r25 | r25 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 98 |  |  |  |  |  |  |
+| $I_{70}$ |  |  |  |  |  |  |  |  |  |  | s88 |  |  |  |  | s89 | s90 |  |  |  | s91 |  |  |  |  | 92 |  |  | 93 | 94 |  |  |  |  |  | 95 |  | 96 |
+| $I_{71}$ |  |  |  |  |  |  |  | r21 |  | r21 |  |  | r21 | r21 | r21 |  |  |  |  |  |  |  |  |  | 100 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{72}$ |  |  |  |  |  |  |  |  |  |  | r10 | r10 |  |  |  | r10 | r10 |  |  |  | r10 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{73}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 103 |  |  |  |  |  |  |  |
+| $I_{74}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 85 |  |  |  |  |  |  |  |
+| $I_{75}$ |  | r18 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{76}$ |  |  | r28 | r28 | r28 | r28 |  | r28 |  | r28 |  |  | r28 | r28 | r28 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{77}$ |  |  | r28 | r28 | r28 | r28 | r28 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{78}$ |  |  |  | r25 | r25 |  | r25 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 97 |  |  |  |  |  |  |
+| $I_{79}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 87 |  |  |  |
+| $I_{80}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 102 |  |  |  |
+| $I_{81}$ |  | r22 |  | r22 | r22 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{82}$ |  |  |  | r25 | r25 |  | r25 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 86 |  |  |  |  |  |  |
+| $I_{83}$ |  | r28 | r28 | r28 | r28 | r28 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{84}$ |  |  |  |  |  |  |  | r20 |  | r20 |  |  | r20 | r20 | r20 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{85}$ |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 107 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{86}$ |  |  |  | r23 | r23 |  | r23 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{87}$ |  | r25 |  | r25 | r25 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 110 |  |  |  |  |  |  |
+| $I_{88}$ |  |  |  |  |  |  |  |  |  |  |  | r8 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 111 |  |
+| $I_{89}$ |  |  |  |  |  |  |  |  | s113 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{90}$ | s105 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{91}$ | s109 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{92}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r4 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{93}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r5 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{94}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r2 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{95}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s106 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{96}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r3 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{97}$ |  |  |  | r24 | r24 |  | r24 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{98}$ |  |  |  | r23 | r23 |  |  | r23 |  | r23 |  |  | r23 | r23 | r23 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{99}$ |  |  |  |  |  |  | r19 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{100}$ |  |  |  |  |  |  |  | r19 |  | r19 |  |  | r19 | r19 | r19 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{101}$ |  |  |  |  |  |  | r20 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{102}$ |  | r25 |  | r25 | r25 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 112 |  |  |  |  |  |  |
+| $I_{103}$ |  | r21 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 108 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{104}$ |  |  |  | r24 | r24 |  |  | r24 |  | r24 |  |  | r24 | r24 | r24 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{105}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 116 |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{106}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 118 |  |  |
+| $I_{107}$ |  | r20 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{108}$ |  | r19 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{109}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 114 |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{110}$ |  | r23 |  | r23 | r23 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{111}$ |  |  |  |  |  |  |  |  |  |  |  | s117 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{112}$ |  | r24 |  | r24 | r24 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{113}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 115 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{114}$ |  | s120 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{115}$ |  |  |  |  |  |  | s119 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{116}$ |  | s121 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{117}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r6 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{118}$ |  |  |  |  |  |  |  |  |  |  | r9 | r9 |  |  |  | r9 | r9 |  |  |  | r9 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{119}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r11 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{120}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 123 |  |  |
+| $I_{121}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s122 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{122}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 124 |  |  |
+| $I_{123}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r10 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{124}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | s125 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| $I_{125}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 126 |  |  |
+| $I_{126}$ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | r9 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |

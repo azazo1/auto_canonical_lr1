@@ -10,5 +10,5 @@ boolop -> < | > | <= | >= | ==
 arithexpr -> multexpr arithexprprime
 arithexprprime -> + multexpr arithexprprime | - multexpr arithexprprime | E
 multexpr -> simpleexpr multexprprime
-multex_prprime -> * simpleexpr multexprprime | / simpleexpr multexprprime | E
+multexprprime -> * simpleexpr multexprprime | / simpleexpr multexprprime | E
 simpleexpr -> ID | NUM | ( arithexpr )
