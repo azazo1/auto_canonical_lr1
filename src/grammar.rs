@@ -23,7 +23,7 @@ impl Debug for Production<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("Production")
             .field(&format_args!(
-                "{:?} -> {:?}",
+                "{:?} -> {}",
                 self.head,
                 self.tail
                     .iter()
