@@ -35,7 +35,7 @@ impl Debug for Item<'_> {
             .map(|(i, t)| format!("{}{:?} ", if i == self.dot { "⋅ " } else { "" }, t))
             .collect();
         f.pad(&format!(
-            "Item({:?} -> {} 〈{:?}〉)",
+            "Item({:?} -> {} {:?})",
             self.prod.head(),
             format!(
                 "{}{}",
@@ -323,30 +323,29 @@ impl<'a> Family<'a> {
         item_sets_idx.insert(i0, 0);
         item_sets.push(i0);
         loop {
-            #[allow(clippy::mutable_key_type)]
-            let mut new_item_set_idx = HashMap::new();
-            for (is, &from) in item_sets_idx.iter() {
+            let mut new_item_sets = Vec::new();
+            for (from, is) in item_sets.iter().enumerate() {
                 for &tok in grammar.tokens() {
                     let Some(nis) = is.goto(tok) else {
                         continue;
                     };
                     let nis = &*bump.alloc(nis);
-                    if !item_sets_idx.contains_key(nis) && !new_item_set_idx.contains_key(nis) {
+                    if !item_sets_idx.contains_key(nis) {
                         // 新加入的项集: nis
                         // GOTO(is, tok) = nis
-                        let to = item_sets.len();
+                        let to = item_sets.len() + new_item_sets.len();
                         // println!("{:?}, {}, {}", tok, from, to);
-                        item_sets.push(nis);
                         gotos.entry(from).or_default().push((tok, to));
-                        new_item_set_idx.insert(nis, to);
+                        new_item_sets.push(nis);
+                        item_sets_idx.insert(nis, to);
                     }
                 }
             }
             // 没有新项集会被加入之后, 收敛, 结束.
-            if new_item_set_idx.is_empty() {
+            if new_item_sets.is_empty() {
                 break;
             }
-            item_sets_idx.extend(new_item_set_idx);
+            item_sets.extend(new_item_sets);
         }
         Self {
             item_sets_idx,
@@ -398,7 +397,7 @@ mod test {
     use bumpalo::Bump;
 
     use crate::{
-        Grammar, NonTerminal, Production, Terminal, Token,
+        Family, Grammar, NonTerminal, Production, Terminal, Token,
         item::{Item, ItemSet},
         token::{EOF, EPSILON},
     };
@@ -605,9 +604,12 @@ mod test {
             }
         );
     }
-
     #[test]
     fn family_of_itemsets() {
+        (0..10).for_each(|_| family_of_itemsets_repeaten());
+    }
+
+    fn family_of_itemsets_repeaten() {
         let bump = Bump::new();
         let grammar = Grammar::from_cfg(
             "program -> stmts
@@ -617,38 +619,15 @@ mod test {
         )
         .unwrap()
         .augmented();
-        let i0 = ItemSet::initial(&grammar).unwrap();
-        #[allow(clippy::mutable_key_type)]
-        let mut family = BTreeSet::new();
-        family.insert(i0);
-        loop {
-            #[allow(clippy::mutable_key_type)]
-            let mut new_item_sets = BTreeSet::new();
-            for is in &family {
-                for &tok in grammar.tokens() {
-                    let Some(nis) = is.goto(tok) else {
-                        continue;
-                    };
-                    if !family.contains(&nis) && !new_item_sets.contains(&nis) {
-                        // 新加入的项集: nis
-                        // GOTO(is, tok) = nis
-                        new_item_sets.insert(nis);
-                    }
-                }
-            }
-            // 没有新项集会被加入之后, 收敛, 结束.
-            if new_item_sets.is_empty() {
-                break;
-            }
-            family.extend(new_item_sets);
-        }
+        let family = Family::from_grammar(&grammar);
         let program = NonTerminal::from("program");
         let programprime = NonTerminal::from("programprime");
         let stmts = NonTerminal::from("stmts");
         let stmt = Terminal::from("stmt");
         let eof_la: fn() -> BTreeSet<_> = || [EOF].into();
+        // 这里使用 Vec, 就是要确保项集状态顺序的不变性, 不能每次运行都是随机的编号.
         assert_eq!(
-            family,
+            family.item_sets,
             [
                 ItemSet {
                     grammar: &grammar,
@@ -664,24 +643,6 @@ mod test {
                         ),
                         Item::initial(&Production::new(stmts, [stmt.into()].into()), eof_la())
                     ]
-                    .into()
-                },
-                ItemSet {
-                    grammar: &grammar,
-                    items: [Item::new(
-                        &Production::new(programprime, [program.into()].into()),
-                        1,
-                        eof_la()
-                    )]
-                    .into()
-                },
-                ItemSet {
-                    grammar: &grammar,
-                    items: [Item::new(
-                        &Production::new(program, [stmts.into()].into()),
-                        1,
-                        eof_la()
-                    )]
                     .into()
                 },
                 ItemSet {
@@ -705,6 +666,24 @@ mod test {
                 ItemSet {
                     grammar: &grammar,
                     items: [Item::new(
+                        &Production::new(programprime, [program.into()].into()),
+                        1,
+                        eof_la()
+                    )]
+                    .into()
+                },
+                ItemSet {
+                    grammar: &grammar,
+                    items: [Item::new(
+                        &Production::new(program, [stmts.into()].into()),
+                        1,
+                        eof_la()
+                    )]
+                    .into()
+                },
+                ItemSet {
+                    grammar: &grammar,
+                    items: [Item::new(
                         &Production::new(stmts, [stmt.into(), stmts.into()].into()),
                         2,
                         eof_la()
@@ -712,7 +691,8 @@ mod test {
                     .into()
                 }
             ]
-            .into()
+            .iter()
+            .collect::<Vec<_>>()
         );
     }
 
