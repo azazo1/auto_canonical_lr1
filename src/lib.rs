@@ -7,5 +7,5 @@ pub mod token;
 
 pub use grammar::{Grammar, Production};
 pub use item::{Family, Item, ItemSet};
-pub use table::Table;
+pub use table::{Table, ActionCell};
 pub use token::{NonTerminal, Terminal, Token};

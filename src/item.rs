@@ -81,6 +81,7 @@ impl Display for Item<'_> {
 
 impl<'a> Item<'a> {
     #[allow(dead_code)]
+    #[must_use]
     pub(crate) fn new(
         prod: &'a Production<'a>,
         dot: usize,
@@ -93,6 +94,7 @@ impl<'a> Item<'a> {
         }
     }
 
+    #[must_use]
     pub(crate) fn initial(prod: &'a Production<'a>, look_aheads: BTreeSet<Terminal<'a>>) -> Self {
         Self {
             prod,
@@ -101,6 +103,7 @@ impl<'a> Item<'a> {
         }
     }
 
+    #[must_use]
     fn with_dot(&self, dot: usize) -> Self {
         Self {
             prod: self.prod,
@@ -113,10 +116,12 @@ impl<'a> Item<'a> {
         self.prod.tail_without_eps().skip(self.dot + 1)
     }
 
+    #[must_use]
     fn expected(&self) -> Option<Token<'a>> {
         self.prod.tail_without_eps().nth(self.dot).copied()
     }
 
+    #[must_use]
     pub fn goto(&self, token: Token<'a>) -> Option<Self> {
         let Some(expected) = self.expected() else {
             None?
@@ -129,6 +134,7 @@ impl<'a> Item<'a> {
 
     /// 返回可以执行 reduce 操作的终结符.
     /// 如果不能 reduce, 那么返回 None.
+    #[must_use]
     pub fn reduces(&self) -> Option<impl Iterator<Item = Terminal<'a>>> {
         if self.expected().is_some() {
             return None;
@@ -136,10 +142,12 @@ impl<'a> Item<'a> {
         Some(self.look_aheads.iter().copied())
     }
 
+    #[must_use]
     fn core(&self) -> (&'a Production<'a>, usize) {
         (self.prod, self.dot)
     }
 
+    #[must_use]
     pub fn prod(&self) -> &'a Production<'a> {
         self.prod
     }
@@ -205,6 +213,7 @@ impl<'a> ItemSet<'a> {
     }
 
     /// 合并具有相同核心, 但是不同 [`look_aheads`] 的项
+    #[must_use]
     fn merge(self) -> Self {
         let mut map: HashMap<(&Production<'_>, usize), Vec<_>> = HashMap::new();
         for item in self.items {
@@ -226,6 +235,7 @@ impl<'a> ItemSet<'a> {
     }
 
     /// 获取当前项集的闭包项集
+    #[must_use]
     fn closure(self) -> Self {
         let mut items = self.items.clone();
         loop {
@@ -262,6 +272,7 @@ impl<'a> ItemSet<'a> {
         .merge()
     }
 
+    #[must_use]
     pub(crate) fn goto(&self, token: Token<'a>) -> Option<Self> {
         let items: BTreeSet<Item<'a>> = self.items.iter().filter_map(|i| i.goto(token)).collect();
         if items.is_empty() {
@@ -301,6 +312,7 @@ pub struct Family<'a> {
 
 impl<'a> Family<'a> {
     /// 从 `grammar` 构建规范 LR(1) 项集族.
+    #[must_use]
     pub fn from_grammar(grammar: &'a Grammar<'a>) -> Self {
         let bump = grammar.bump();
         let i0 = &*bump.alloc(ItemSet::initial(grammar).unwrap());
@@ -348,6 +360,7 @@ impl<'a> Family<'a> {
         self.item_sets.iter().copied()
     }
 
+    #[must_use]
     pub fn get_item_set(&self, idx: usize) -> Option<&'a ItemSet<'a>> {
         self.item_sets.get(idx).copied()
     }
@@ -361,13 +374,20 @@ impl<'a> Family<'a> {
 
     /// 获取一个项集的 gotos: (转换 Token, 到达项集).
     /// 如果 item_set, 没有对应项集, 或者项集没有出边, 那么返回 [`None`]
+    #[must_use]
     pub fn gotos_of(&self, item_set: usize) -> Option<impl Iterator<Item = (Token<'a>, usize)>> {
         self.gotos.get(&item_set).map(|v| v.iter().copied())
     }
 
     /// 获取项集族数量
+    #[must_use]
     pub fn len(&self) -> usize {
         self.item_sets.len()
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 

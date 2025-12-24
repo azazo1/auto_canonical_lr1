@@ -50,6 +50,7 @@ impl ActionCell {
     }
 
     /// 展开所有的叶子节点(非 [`ActionCell::Conflict`] 节点)(从树的左侧到右侧).
+    #[must_use]
     pub fn flatten(&self) -> Box<dyn Iterator<Item = &ActionCell> + '_> {
         match self {
             Self::Conflict(left, right) => Box::new(left.flatten().chain(right.flatten())),
@@ -77,6 +78,7 @@ pub struct Table<'a> {
 }
 
 impl<'a> Table<'a> {
+    #[must_use]
     pub fn build_from(family: &'a Family<'a>, grammar: &'a Grammar<'a>) -> Self {
         let tokens = grammar.tokens().iter();
         // 这里要求终结符一定要在非终结符排序的前面.
@@ -135,19 +137,23 @@ impl<'a> Table<'a> {
         }
     }
 
+    #[must_use]
     pub fn rows(&self) -> usize {
         self.family.len()
     }
 
+    #[must_use]
     pub fn action_cols(&self) -> usize {
         self.terms.len()
     }
 
+    #[must_use]
     pub fn goto_cols(&self) -> usize {
         self.non_terms.len()
     }
 
     /// 使用 markdown 形式输出表格.
+    #[must_use]
     pub fn to_markdown(&self) -> String {
         let mut header_line = "| |".to_string();
         header_line += &self

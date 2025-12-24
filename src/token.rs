@@ -50,6 +50,7 @@ impl<'a> From<&'a str> for Terminal<'a> {
 }
 
 impl<'a> Terminal<'a> {
+    #[must_use]
     pub fn as_str(&self) -> &str {
         self.ident
     }
@@ -82,6 +83,7 @@ impl<'a> From<&'a str> for NonTerminal<'a> {
 }
 
 impl<'a> NonTerminal<'a> {
+    #[must_use]
     pub fn as_str(&self) -> &str {
         self.ident
     }
@@ -142,6 +144,7 @@ impl PartialEq for Token<'_> {
 impl Eq for Token<'_> {}
 
 impl<'a> Token<'a> {
+    #[must_use]
     pub fn as_str(&self) -> &str {
         match self {
             Self::Terminal(t) => t.as_str(),
@@ -149,14 +152,17 @@ impl<'a> Token<'a> {
         }
     }
 
+    #[must_use]
     pub fn is_term(&self) -> bool {
         matches!(self, Token::Terminal(_))
     }
 
+    #[must_use]
     pub fn is_non_term(&self) -> bool {
         matches!(self, Token::NonTerminal(_))
     }
 
+    #[must_use]
     pub fn as_term(&self) -> Option<&Terminal<'a>> {
         match self {
             Self::Terminal(t) => Some(t),
@@ -164,6 +170,7 @@ impl<'a> Token<'a> {
         }
     }
 
+    #[must_use]
     pub fn as_non_term(&self) -> Option<&NonTerminal<'a>> {
         match self {
             Self::Terminal(_) => None,

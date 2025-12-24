@@ -58,14 +58,17 @@ impl PartialEq for Production<'_> {
 impl Eq for Production<'_> {}
 
 impl<'a> Production<'a> {
+    #[must_use]
     pub fn new(head: NonTerminal<'a>, tail: Vec<Token<'a>>) -> Self {
         Self { head, tail }
     }
 
+    #[must_use]
     pub fn head(&self) -> NonTerminal<'a> {
         self.head
     }
 
+    #[must_use]
     pub fn tail(&self) -> &[Token<'a>] {
         &self.tail
     }
@@ -77,10 +80,12 @@ impl<'a> Production<'a> {
     }
 
     /// 产生式尾部的 tokens 数量, [`EPSILON`] 不算长度.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.tail_without_eps().count()
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -115,6 +120,7 @@ impl PartialEq for Grammar<'_> {
 impl Eq for Grammar<'_> {}
 
 impl<'a> Grammar<'a> {
+    #[must_use]
     pub(crate) fn bump(&self) -> &Bump {
         self.bump
     }
@@ -125,18 +131,22 @@ impl<'a> Grammar<'a> {
     }
 
     /// 获取产生式的编号, 如果产生式在文法中不存在, 那么返回 [`None`].
+    #[must_use]
     pub fn index_of_prod(&self, prod: &Production<'a>) -> Option<usize> {
         self.prod_indexes.get(prod).copied()
     }
 
+    #[must_use]
     pub fn symbol_start(&self) -> NonTerminal<'a> {
         self.start
     }
 
+    #[must_use]
     pub fn tokens(&self) -> &BTreeSet<Token<'a>> {
         &self.tokens
     }
 
+    #[must_use]
     pub fn augmented(mut self) -> Self {
         let new_start = self.bump.alloc(format!("{}prime", self.start.as_str()));
         let augmented_start = NonTerminal::from(new_start.as_str());
@@ -222,6 +232,7 @@ impl<'a> Grammar<'a> {
     }
 
     /// 获取以某个非终结符为头部的所有产生式, 结果可能为空.
+    #[must_use]
     pub(crate) fn prods_of(&self, nt: NonTerminal<'a>) -> HashSet<&Production<'a>> {
         self.prods().filter(|p| p.head == nt).collect()
     }
