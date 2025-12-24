@@ -22,7 +22,7 @@ fn main() {
         println!("{:>4} {}", grammar.index_of_prod(prod).unwrap(), prod);
     }
     println!();
-    let family = Family::build_from(&grammar);
+    let family = Family::from_grammar(&grammar);
     for (from, is) in family.item_sets().enumerate() {
         println!("I_{from}:");
         for item in is.items() {

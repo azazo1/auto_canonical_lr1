@@ -129,7 +129,7 @@ impl<'a> Item<'a> {
 
     /// 返回可以执行 reduce 操作的终结符.
     /// 如果不能 reduce, 那么返回 None.
-    pub fn reduce(&self) -> Option<impl Iterator<Item = Terminal<'a>>> {
+    pub fn reduces(&self) -> Option<impl Iterator<Item = Terminal<'a>>> {
         if self.expected().is_some() {
             return None;
         }
@@ -284,7 +284,7 @@ impl<'a> ItemSet<'a> {
     pub fn reduces(&self) -> impl Iterator<Item = (&Item<'a>, Terminal<'a>)> {
         self.items
             .iter()
-            .filter_map(|i| i.reduce().map(|r| (i, r)))
+            .filter_map(|i| i.reduces().map(|r| (i, r)))
             .flat_map(|(i, r)| r.map(move |t| (i, t)))
     }
 }
@@ -300,8 +300,8 @@ pub struct Family<'a> {
 }
 
 impl<'a> Family<'a> {
-    /// 从 `grammar` 构建规范 LR(1) 集族.
-    pub fn build_from(grammar: &'a Grammar<'a>) -> Self {
+    /// 从 `grammar` 构建规范 LR(1) 项集族.
+    pub fn from_grammar(grammar: &'a Grammar<'a>) -> Self {
         let bump = grammar.bump();
         let i0 = &*bump.alloc(ItemSet::initial(grammar).unwrap());
         #[allow(clippy::mutable_key_type)]
@@ -363,6 +363,11 @@ impl<'a> Family<'a> {
     /// 如果 item_set, 没有对应项集, 或者项集没有出边, 那么返回 [`None`]
     pub fn gotos_of(&self, item_set: usize) -> Option<impl Iterator<Item = (Token<'a>, usize)>> {
         self.gotos.get(&item_set).map(|v| v.iter().copied())
+    }
+
+    /// 获取项集族数量
+    pub fn len(&self) -> usize {
+        self.item_sets.len()
     }
 }
 

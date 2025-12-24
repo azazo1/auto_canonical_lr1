@@ -1,8 +1,34 @@
 use std::fmt::{Debug, Display};
 
-#[derive(PartialEq, Eq, Clone, Hash, Copy, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, Clone, Hash, Copy)]
 pub struct Terminal<'a> {
     ident: &'a str,
+}
+
+impl PartialOrd for Terminal<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+/// ..., EPSILON, EOF 的顺序, 其中 ... 的排序是短的在前(字节数量), 同样长度的按照字符串排序.
+impl Ord for Terminal<'_> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        use std::cmp::Ordering::*;
+        match (*self, *other) {
+            (EOF, EOF) => Equal,
+            (_, EOF) => Less,
+            (EOF, _) => Greater,
+            (EPSILON, EPSILON) => Equal,
+            (_, EPSILON) => Less,
+            (EPSILON, _) => Greater,
+            (this, other) => this
+                .ident
+                .len()
+                .cmp(&other.ident.len())
+                .then(this.ident.cmp(other.ident)),
+        }
+    }
 }
 
 impl Debug for Terminal<'_> {
@@ -61,10 +87,28 @@ impl<'a> NonTerminal<'a> {
     }
 }
 
-#[derive(Clone, Copy, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Hash)]
 pub enum Token<'a> {
     Terminal(Terminal<'a>),
     NonTerminal(NonTerminal<'a>),
+}
+
+impl PartialOrd for Token<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Token<'_> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        use std::cmp::Ordering;
+        match (self, other) {
+            (Self::Terminal(t1), Self::Terminal(t2)) => t1.cmp(t2),
+            (Self::Terminal(_), Self::NonTerminal(_)) => Ordering::Less,
+            (Self::NonTerminal(_), Self::Terminal(_)) => Ordering::Greater,
+            (Self::NonTerminal(nt1), Self::NonTerminal(nt2)) => nt1.cmp(nt2),
+        }
+    }
 }
 
 impl Debug for Token<'_> {
@@ -97,11 +141,33 @@ impl PartialEq for Token<'_> {
 
 impl Eq for Token<'_> {}
 
-impl Token<'_> {
+impl<'a> Token<'a> {
     pub fn as_str(&self) -> &str {
         match self {
             Self::Terminal(t) => t.as_str(),
             Self::NonTerminal(nt) => nt.as_str(),
+        }
+    }
+
+    pub fn is_term(&self) -> bool {
+        matches!(self, Token::Terminal(_))
+    }
+
+    pub fn is_non_term(&self) -> bool {
+        matches!(self, Token::NonTerminal(_))
+    }
+
+    pub fn as_term(&self) -> Option<&Terminal<'a>> {
+        match self {
+            Self::Terminal(t) => Some(t),
+            Self::NonTerminal(_) => None,
+        }
+    }
+
+    pub fn as_non_term(&self) -> Option<&NonTerminal<'a>> {
+        match self {
+            Self::Terminal(_) => None,
+            Self::NonTerminal(nt) => Some(nt),
         }
     }
 }

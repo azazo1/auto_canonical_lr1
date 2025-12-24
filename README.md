@@ -29,9 +29,9 @@
    cargo run -q -- --symbol-start program < input.txt &> output.txt
    ```
 
-3. 获取输出(`output.txt`).
+3. 获取输出(`output.txt`), 预期是能够输出项集族和语法分析表.
 
-## todo
+## 特殊终结符
 
-- 项集规约迭代.
-- item: `dot E` 这样的结构标记为可以规约.
+- eof: 使用 "eof" 表示 token 流末尾.
+- E: 使用 "E" 表示 $\epsilon$ 终结符.

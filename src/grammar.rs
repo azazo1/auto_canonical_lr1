@@ -1,11 +1,15 @@
 use bumpalo::Bump;
 use std::{
     cell::RefCell,
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     fmt::{Debug, Display},
 };
 
-use crate::{NonTerminal, Terminal, Token, error::Error, token::EPSILON};
+use crate::{
+    NonTerminal, Terminal, Token,
+    error::Error,
+    token::{EOF, EPSILON},
+};
 
 #[derive(Clone, Hash, PartialOrd, Ord)]
 pub struct Production<'a> {
@@ -95,7 +99,7 @@ pub struct Grammar<'a> {
     bump: &'a Bump,
     prods: Vec<&'a Production<'a>>,
     prod_indexes: HashMap<&'a Production<'a>, usize>,
-    tokens: HashSet<Token<'a>>,
+    tokens: BTreeSet<Token<'a>>,
     start: NonTerminal<'a>,
     /// 缓存的各个非终结符的 first 集,
     /// 在 [`Grammar`] 创建的时候为每个 [`NonTerminal`] 初始化为 [`FirstSet::None`],
@@ -104,9 +108,7 @@ pub struct Grammar<'a> {
 
 impl PartialEq for Grammar<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.prod_indexes == other.prod_indexes
-            && self.start == other.start
-            && self.tokens == other.tokens
+        self.prods == other.prods && self.start == other.start && self.tokens == other.tokens
     }
 }
 
@@ -131,7 +133,7 @@ impl<'a> Grammar<'a> {
         self.start
     }
 
-    pub fn tokens(&self) -> &HashSet<Token<'a>> {
+    pub fn tokens(&self) -> &BTreeSet<Token<'a>> {
         &self.tokens
     }
 
@@ -158,7 +160,7 @@ impl<'a> Grammar<'a> {
     }
 
     pub fn from_cfg(s: &'a str, start: NonTerminal<'a>, bump: &'a Bump) -> Result<Self, Error> {
-        let mut tokens = HashSet::new();
+        let mut tokens: BTreeSet<Token<'_>> = [EPSILON.into(), EOF.into()].into();
         let mut non_terminals = HashSet::new();
         let mut splitted: Vec<(&str, &str)> = Vec::new();
         for (line_num, line) in s
@@ -378,7 +380,7 @@ impl<'a> Grammar<'a> {
 
 #[cfg(test)]
 mod test {
-    use std::collections::{HashMap, HashSet};
+    use std::collections::BTreeSet;
 
     use crate::{NonTerminal, Production, Terminal, Token, grammar::Grammar, token::EPSILON};
     use bumpalo::Bump;
@@ -392,11 +394,11 @@ mod test {
             compoundstmt -> { stmts }
         ";
         let bump = Bump::new();
-        let rst = Grammar::from_cfg(input, "program".into(), &bump)
+        let grammar = Grammar::from_cfg(input, "program".into(), &bump)
             .unwrap()
             .augmented();
 
-        let prods = vec![
+        let prods = [
             Production::new(
                 "programprime".into(),
                 vec![NonTerminal::from("program").into()],
@@ -418,7 +420,7 @@ mod test {
             ),
         ];
 
-        let tokens: HashSet<Token<'static>> = [
+        let tokens: BTreeSet<Token<'static>> = [
             NonTerminal::from("programprime").into(),
             NonTerminal::from("program").into(),
             NonTerminal::from("compoundstmt").into(),
@@ -432,9 +434,9 @@ mod test {
         ]
         .into();
 
-        assert_eq!(rst.start, "programprime".into());
-        assert_eq!(rst.prods, prods.iter().collect::<Vec<_>>());
-        assert_eq!(rst.tokens, tokens);
+        assert_eq!(grammar.start, "programprime".into());
+        assert_eq!(grammar.prods, prods.iter().collect::<Vec<_>>());
+        assert_eq!(grammar.tokens, tokens);
     }
 
     #[test]
