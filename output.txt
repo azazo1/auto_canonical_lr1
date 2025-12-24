@@ -1,0 +1,943 @@
+   0 programprime -> program
+   1 program -> compoundstmt
+   2 stmt -> ifstmt
+   3 stmt -> whilestmt
+   4 stmt -> assgstmt
+   5 stmt -> compoundstmt
+   6 compoundstmt -> { stmts }
+   7 stmts -> stmt stmts
+   8 stmts -> E
+   9 ifstmt -> if ( boolexpr ) then stmt else stmt
+  10 whilestmt -> while ( boolexpr ) stmt
+  11 assgstmt -> ID = arithexpr ;
+  12 boolexpr -> arithexpr boolop arithexpr
+  13 boolop -> <
+  14 boolop -> >
+  15 boolop -> <=
+  16 boolop -> >=
+  17 boolop -> ==
+  18 arithexpr -> multexpr arithexprprime
+  19 arithexprprime -> + multexpr arithexprprime
+  20 arithexprprime -> - multexpr arithexprprime
+  21 arithexprprime -> E
+  22 multexpr -> simpleexpr multexprprime
+  23 multex_prprime -> * simpleexpr multexprprime
+  24 multex_prprime -> / simpleexpr multexprprime
+  25 multex_prprime -> E
+  26 simpleexpr -> ID
+  27 simpleexpr -> NUM
+  28 simpleexpr -> ( arithexpr )
+
+I_0:
+compoundstmt -> ⋅ { stmts } 〈eof〉
+program -> ⋅ compoundstmt 〈eof〉
+programprime -> ⋅ program 〈eof〉
+reduces:
+gotos:
+I_0 -- nt"compoundstmt" --> I_1
+I_0 -- nt"program" --> I_2
+I_0 -- t"{" --> I_3
+
+I_1:
+program -> compoundstmt ⋅ 〈eof〉
+reduces:
+t"eof" r 1
+gotos:
+
+I_2:
+programprime -> program ⋅ 〈eof〉
+reduces:
+t"eof" r 0
+gotos:
+
+I_3:
+assgstmt -> ⋅ ID = arithexpr ; 〈ID, if, while, {, }〉
+compoundstmt -> ⋅ { stmts } 〈ID, if, while, {, }〉
+compoundstmt -> { ⋅ stmts } 〈eof〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈ID, if, while, {, }〉
+stmt -> ⋅ assgstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ compoundstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ ifstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ whilestmt 〈ID, if, while, {, }〉
+stmts -> ⋅ 〈}〉
+stmts -> ⋅ stmt stmts 〈}〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈ID, if, while, {, }〉
+reduces:
+t"}" r 8
+gotos:
+I_3 -- nt"compoundstmt" --> I_4
+I_3 -- t"{" --> I_5
+I_3 -- nt"whilestmt" --> I_6
+I_3 -- nt"assgstmt" --> I_7
+I_3 -- t"while" --> I_8
+I_3 -- nt"stmt" --> I_9
+I_3 -- t"ID" --> I_10
+I_3 -- nt"ifstmt" --> I_11
+I_3 -- t"if" --> I_12
+I_3 -- nt"stmts" --> I_13
+
+I_4:
+stmt -> compoundstmt ⋅ 〈ID, if, while, {, }〉
+reduces:
+t"ID" r 5
+t"if" r 5
+t"while" r 5
+t"{" r 5
+t"}" r 5
+gotos:
+
+I_5:
+assgstmt -> ⋅ ID = arithexpr ; 〈ID, if, while, {, }〉
+compoundstmt -> ⋅ { stmts } 〈ID, if, while, {, }〉
+compoundstmt -> { ⋅ stmts } 〈ID, if, while, {, }〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈ID, if, while, {, }〉
+stmt -> ⋅ assgstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ compoundstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ ifstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ whilestmt 〈ID, if, while, {, }〉
+stmts -> ⋅ 〈}〉
+stmts -> ⋅ stmt stmts 〈}〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈ID, if, while, {, }〉
+reduces:
+t"}" r 8
+gotos:
+I_5 -- nt"stmts" --> I_17
+
+I_6:
+stmt -> whilestmt ⋅ 〈ID, if, while, {, }〉
+reduces:
+t"ID" r 3
+t"if" r 3
+t"while" r 3
+t"{" r 3
+t"}" r 3
+gotos:
+
+I_7:
+stmt -> assgstmt ⋅ 〈ID, if, while, {, }〉
+reduces:
+t"ID" r 4
+t"if" r 4
+t"while" r 4
+t"{" r 4
+t"}" r 4
+gotos:
+
+I_8:
+whilestmt -> while ⋅ ( boolexpr ) stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_8 -- t"(" --> I_15
+
+I_9:
+assgstmt -> ⋅ ID = arithexpr ; 〈ID, if, while, {, }〉
+compoundstmt -> ⋅ { stmts } 〈ID, if, while, {, }〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈ID, if, while, {, }〉
+stmt -> ⋅ assgstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ compoundstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ ifstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ whilestmt 〈ID, if, while, {, }〉
+stmts -> ⋅ 〈}〉
+stmts -> ⋅ stmt stmts 〈}〉
+stmts -> stmt ⋅ stmts 〈}〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈ID, if, while, {, }〉
+reduces:
+t"}" r 8
+gotos:
+I_9 -- nt"stmts" --> I_16
+
+I_10:
+assgstmt -> ID ⋅ = arithexpr ; 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_10 -- t"=" --> I_19
+
+I_11:
+stmt -> ifstmt ⋅ 〈ID, if, while, {, }〉
+reduces:
+t"ID" r 2
+t"if" r 2
+t"while" r 2
+t"{" r 2
+t"}" r 2
+gotos:
+
+I_12:
+ifstmt -> if ⋅ ( boolexpr ) then stmt else stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_12 -- t"(" --> I_18
+
+I_13:
+compoundstmt -> { stmts ⋅ } 〈eof〉
+reduces:
+gotos:
+I_13 -- t"}" --> I_14
+
+I_14:
+compoundstmt -> { stmts } ⋅ 〈eof〉
+reduces:
+t"eof" r 6
+gotos:
+
+I_15:
+arithexpr -> ⋅ multexpr arithexprprime 〈<, <=, ==, >, >=〉
+boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, <=, ==, >, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+whilestmt -> while ( ⋅ boolexpr ) stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_15 -- nt"boolexpr" --> I_31
+
+I_16:
+stmts -> stmt stmts ⋅ 〈}〉
+reduces:
+t"}" r 7
+gotos:
+
+I_17:
+compoundstmt -> { stmts ⋅ } 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_17 -- t"}" --> I_26
+
+I_18:
+arithexpr -> ⋅ multexpr arithexprprime 〈<, <=, ==, >, >=〉
+boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
+ifstmt -> if ( ⋅ boolexpr ) then stmt else stmt 〈ID, if, while, {, }〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, <=, ==, >, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_18 -- nt"multexpr" --> I_27
+I_18 -- nt"boolexpr" --> I_28
+I_18 -- nt"arithexpr" --> I_29
+I_18 -- nt"simpleexpr" --> I_30
+
+I_19:
+arithexpr -> ⋅ multexpr arithexprprime 〈;〉
+assgstmt -> ID = ⋅ arithexpr ; 〈ID, if, while, {, }〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_19 -- t"NUM" --> I_20
+I_19 -- nt"multexpr" --> I_21
+I_19 -- t"(" --> I_22
+I_19 -- t"ID" --> I_23
+I_19 -- nt"arithexpr" --> I_24
+I_19 -- nt"simpleexpr" --> I_25
+
+I_20:
+simpleexpr -> NUM ⋅ 〈multexprprime〉
+reduces:
+t"multexprprime" r 27
+gotos:
+
+I_21:
+arithexpr -> multexpr ⋅ arithexprprime 〈;〉
+arithexprprime -> ⋅ + multexpr arithexprprime 〈;〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈;〉
+arithexprprime -> ⋅ 〈;〉
+reduces:
+t";" r 21
+gotos:
+I_21 -- t"-" --> I_49
+I_21 -- t"+" --> I_50
+I_21 -- nt"arithexprprime" --> I_51
+
+I_22:
+arithexpr -> ⋅ multexpr arithexprprime 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ( ⋅ arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_22 -- nt"multexpr" --> I_45
+I_22 -- nt"arithexpr" --> I_46
+I_22 -- nt"simpleexpr" --> I_47
+
+I_23:
+simpleexpr -> ID ⋅ 〈multexprprime〉
+reduces:
+t"multexprprime" r 26
+gotos:
+
+I_24:
+assgstmt -> ID = arithexpr ⋅ ; 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_24 -- t";" --> I_32
+
+I_25:
+multexpr -> simpleexpr ⋅ multexprprime 〈+, -, ;〉
+reduces:
+gotos:
+I_25 -- t"multexprprime" --> I_39
+
+I_26:
+compoundstmt -> { stmts } ⋅ 〈ID, if, while, {, }〉
+reduces:
+t"ID" r 6
+t"if" r 6
+t"while" r 6
+t"{" r 6
+t"}" r 6
+gotos:
+
+I_27:
+arithexpr -> multexpr ⋅ arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> ⋅ + multexpr arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> ⋅ 〈<, <=, ==, >, >=〉
+reduces:
+t"<" r 21
+t"<=" r 21
+t"==" r 21
+t">" r 21
+t">=" r 21
+gotos:
+I_27 -- t"-" --> I_40
+I_27 -- t"+" --> I_41
+I_27 -- nt"arithexprprime" --> I_42
+
+I_28:
+ifstmt -> if ( boolexpr ⋅ ) then stmt else stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_28 -- t")" --> I_48
+
+I_29:
+boolexpr -> arithexpr ⋅ boolop arithexpr 〈)〉
+boolop -> ⋅ < 〈(, ID, NUM〉
+boolop -> ⋅ <= 〈(, ID, NUM〉
+boolop -> ⋅ == 〈(, ID, NUM〉
+boolop -> ⋅ > 〈(, ID, NUM〉
+boolop -> ⋅ >= 〈(, ID, NUM〉
+reduces:
+gotos:
+I_29 -- t">=" --> I_33
+I_29 -- t"==" --> I_34
+I_29 -- nt"boolop" --> I_35
+I_29 -- t"<" --> I_36
+I_29 -- t">" --> I_37
+I_29 -- t"<=" --> I_38
+
+I_30:
+multexpr -> simpleexpr ⋅ multexprprime 〈+, -, <, <=, ==, >, >=〉
+reduces:
+gotos:
+I_30 -- t"multexprprime" --> I_43
+
+I_31:
+whilestmt -> while ( boolexpr ⋅ ) stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_31 -- t")" --> I_44
+
+I_32:
+assgstmt -> ID = arithexpr ; ⋅ 〈ID, if, while, {, }〉
+reduces:
+t"ID" r 11
+t"if" r 11
+t"while" r 11
+t"{" r 11
+t"}" r 11
+gotos:
+
+I_33:
+boolop -> >= ⋅ 〈(, ID, NUM〉
+reduces:
+t"(" r 16
+t"ID" r 16
+t"NUM" r 16
+gotos:
+
+I_34:
+boolop -> == ⋅ 〈(, ID, NUM〉
+reduces:
+t"(" r 17
+t"ID" r 17
+t"NUM" r 17
+gotos:
+
+I_35:
+arithexpr -> ⋅ multexpr arithexprprime 〈)〉
+boolexpr -> arithexpr boolop ⋅ arithexpr 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_35 -- nt"arithexpr" --> I_61
+
+I_36:
+boolop -> < ⋅ 〈(, ID, NUM〉
+reduces:
+t"(" r 13
+t"ID" r 13
+t"NUM" r 13
+gotos:
+
+I_37:
+boolop -> > ⋅ 〈(, ID, NUM〉
+reduces:
+t"(" r 14
+t"ID" r 14
+t"NUM" r 14
+gotos:
+
+I_38:
+boolop -> <= ⋅ 〈(, ID, NUM〉
+reduces:
+t"(" r 15
+t"ID" r 15
+t"NUM" r 15
+gotos:
+
+I_39:
+multexpr -> simpleexpr multexprprime ⋅ 〈+, -, ;〉
+reduces:
+t"+" r 22
+t"-" r 22
+t";" r 22
+gotos:
+
+I_40:
+arithexprprime -> - ⋅ multexpr arithexprprime 〈<, <=, ==, >, >=〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, <=, ==, >, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_40 -- nt"multexpr" --> I_54
+
+I_41:
+arithexprprime -> + ⋅ multexpr arithexprprime 〈<, <=, ==, >, >=〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, <=, ==, >, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_41 -- nt"multexpr" --> I_53
+
+I_42:
+arithexpr -> multexpr arithexprprime ⋅ 〈<, <=, ==, >, >=〉
+reduces:
+t"<" r 18
+t"<=" r 18
+t"==" r 18
+t">" r 18
+t">=" r 18
+gotos:
+
+I_43:
+multexpr -> simpleexpr multexprprime ⋅ 〈+, -, <, <=, ==, >, >=〉
+reduces:
+t"+" r 22
+t"-" r 22
+t"<" r 22
+t"<=" r 22
+t"==" r 22
+t">" r 22
+t">=" r 22
+gotos:
+
+I_44:
+assgstmt -> ⋅ ID = arithexpr ; 〈ID, if, while, {, }〉
+compoundstmt -> ⋅ { stmts } 〈ID, if, while, {, }〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈ID, if, while, {, }〉
+stmt -> ⋅ assgstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ compoundstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ ifstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ whilestmt 〈ID, if, while, {, }〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈ID, if, while, {, }〉
+whilestmt -> while ( boolexpr ) ⋅ stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_44 -- nt"stmt" --> I_63
+
+I_45:
+arithexpr -> multexpr ⋅ arithexprprime 〈)〉
+arithexprprime -> ⋅ + multexpr arithexprprime 〈)〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈)〉
+arithexprprime -> ⋅ 〈)〉
+reduces:
+t")" r 21
+gotos:
+I_45 -- t"-" --> I_57
+I_45 -- t"+" --> I_58
+I_45 -- nt"arithexprprime" --> I_59
+
+I_46:
+simpleexpr -> ( arithexpr ⋅ ) 〈multexprprime〉
+reduces:
+gotos:
+I_46 -- t")" --> I_56
+
+I_47:
+multexpr -> simpleexpr ⋅ multexprprime 〈), +, -〉
+reduces:
+gotos:
+I_47 -- t"multexprprime" --> I_60
+
+I_48:
+ifstmt -> if ( boolexpr ) ⋅ then stmt else stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_48 -- t"then" --> I_55
+
+I_49:
+arithexprprime -> - ⋅ multexpr arithexprprime 〈;〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_49 -- nt"multexpr" --> I_62
+
+I_50:
+arithexprprime -> + ⋅ multexpr arithexprprime 〈;〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_50 -- nt"multexpr" --> I_52
+
+I_51:
+arithexpr -> multexpr arithexprprime ⋅ 〈;〉
+reduces:
+t";" r 18
+gotos:
+
+I_52:
+arithexprprime -> ⋅ + multexpr arithexprprime 〈;〉
+arithexprprime -> + multexpr ⋅ arithexprprime 〈;〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈;〉
+arithexprprime -> ⋅ 〈;〉
+reduces:
+t";" r 21
+gotos:
+I_52 -- nt"arithexprprime" --> I_67
+
+I_53:
+arithexprprime -> ⋅ + multexpr arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> + multexpr ⋅ arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> ⋅ 〈<, <=, ==, >, >=〉
+reduces:
+t"<" r 21
+t"<=" r 21
+t"==" r 21
+t">" r 21
+t">=" r 21
+gotos:
+I_53 -- nt"arithexprprime" --> I_68
+
+I_54:
+arithexprprime -> ⋅ + multexpr arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> - multexpr ⋅ arithexprprime 〈<, <=, ==, >, >=〉
+arithexprprime -> ⋅ 〈<, <=, ==, >, >=〉
+reduces:
+t"<" r 21
+t"<=" r 21
+t"==" r 21
+t">" r 21
+t">=" r 21
+gotos:
+I_54 -- nt"arithexprprime" --> I_66
+
+I_55:
+assgstmt -> ⋅ ID = arithexpr ; 〈else〉
+compoundstmt -> ⋅ { stmts } 〈else〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈else〉
+ifstmt -> if ( boolexpr ) then ⋅ stmt else stmt 〈ID, if, while, {, }〉
+stmt -> ⋅ assgstmt 〈else〉
+stmt -> ⋅ compoundstmt 〈else〉
+stmt -> ⋅ ifstmt 〈else〉
+stmt -> ⋅ whilestmt 〈else〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈else〉
+reduces:
+gotos:
+I_55 -- nt"compoundstmt" --> I_70
+I_55 -- t"{" --> I_71
+I_55 -- nt"whilestmt" --> I_72
+I_55 -- nt"assgstmt" --> I_73
+I_55 -- t"while" --> I_74
+I_55 -- nt"stmt" --> I_75
+I_55 -- t"ID" --> I_76
+I_55 -- nt"ifstmt" --> I_77
+I_55 -- t"if" --> I_78
+
+I_56:
+simpleexpr -> ( arithexpr ) ⋅ 〈multexprprime〉
+reduces:
+t"multexprprime" r 28
+gotos:
+
+I_57:
+arithexprprime -> - ⋅ multexpr arithexprprime 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_57 -- nt"multexpr" --> I_65
+
+I_58:
+arithexprprime -> + ⋅ multexpr arithexprprime 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈), +, -〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_58 -- nt"multexpr" --> I_69
+
+I_59:
+arithexpr -> multexpr arithexprprime ⋅ 〈)〉
+reduces:
+t")" r 18
+gotos:
+
+I_60:
+multexpr -> simpleexpr multexprprime ⋅ 〈), +, -〉
+reduces:
+t")" r 22
+t"+" r 22
+t"-" r 22
+gotos:
+
+I_61:
+boolexpr -> arithexpr boolop arithexpr ⋅ 〈)〉
+reduces:
+t")" r 12
+gotos:
+
+I_62:
+arithexprprime -> ⋅ + multexpr arithexprprime 〈;〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈;〉
+arithexprprime -> - multexpr ⋅ arithexprprime 〈;〉
+arithexprprime -> ⋅ 〈;〉
+reduces:
+t";" r 21
+gotos:
+I_62 -- nt"arithexprprime" --> I_64
+
+I_63:
+whilestmt -> while ( boolexpr ) stmt ⋅ 〈ID, if, while, {, }〉
+reduces:
+t"ID" r 10
+t"if" r 10
+t"while" r 10
+t"{" r 10
+t"}" r 10
+gotos:
+
+I_64:
+arithexprprime -> - multexpr arithexprprime ⋅ 〈;〉
+reduces:
+t";" r 20
+gotos:
+
+I_65:
+arithexprprime -> ⋅ + multexpr arithexprprime 〈)〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈)〉
+arithexprprime -> - multexpr ⋅ arithexprprime 〈)〉
+arithexprprime -> ⋅ 〈)〉
+reduces:
+t")" r 21
+gotos:
+I_65 -- nt"arithexprprime" --> I_80
+
+I_66:
+arithexprprime -> - multexpr arithexprprime ⋅ 〈<, <=, ==, >, >=〉
+reduces:
+t"<" r 20
+t"<=" r 20
+t"==" r 20
+t">" r 20
+t">=" r 20
+gotos:
+
+I_67:
+arithexprprime -> + multexpr arithexprprime ⋅ 〈;〉
+reduces:
+t";" r 19
+gotos:
+
+I_68:
+arithexprprime -> + multexpr arithexprprime ⋅ 〈<, <=, ==, >, >=〉
+reduces:
+t"<" r 19
+t"<=" r 19
+t"==" r 19
+t">" r 19
+t">=" r 19
+gotos:
+
+I_69:
+arithexprprime -> ⋅ + multexpr arithexprprime 〈)〉
+arithexprprime -> + multexpr ⋅ arithexprprime 〈)〉
+arithexprprime -> ⋅ - multexpr arithexprprime 〈)〉
+arithexprprime -> ⋅ 〈)〉
+reduces:
+t")" r 21
+gotos:
+I_69 -- nt"arithexprprime" --> I_81
+
+I_70:
+stmt -> compoundstmt ⋅ 〈else〉
+reduces:
+t"else" r 5
+gotos:
+
+I_71:
+assgstmt -> ⋅ ID = arithexpr ; 〈ID, if, while, {, }〉
+compoundstmt -> ⋅ { stmts } 〈ID, if, while, {, }〉
+compoundstmt -> { ⋅ stmts } 〈else〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈ID, if, while, {, }〉
+stmt -> ⋅ assgstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ compoundstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ ifstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ whilestmt 〈ID, if, while, {, }〉
+stmts -> ⋅ 〈}〉
+stmts -> ⋅ stmt stmts 〈}〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈ID, if, while, {, }〉
+reduces:
+t"}" r 8
+gotos:
+I_71 -- nt"stmts" --> I_82
+
+I_72:
+stmt -> whilestmt ⋅ 〈else〉
+reduces:
+t"else" r 3
+gotos:
+
+I_73:
+stmt -> assgstmt ⋅ 〈else〉
+reduces:
+t"else" r 4
+gotos:
+
+I_74:
+whilestmt -> while ⋅ ( boolexpr ) stmt 〈else〉
+reduces:
+gotos:
+I_74 -- t"(" --> I_83
+
+I_75:
+ifstmt -> if ( boolexpr ) then stmt ⋅ else stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_75 -- t"else" --> I_84
+
+I_76:
+assgstmt -> ID ⋅ = arithexpr ; 〈else〉
+reduces:
+gotos:
+I_76 -- t"=" --> I_79
+
+I_77:
+stmt -> ifstmt ⋅ 〈else〉
+reduces:
+t"else" r 2
+gotos:
+
+I_78:
+ifstmt -> if ⋅ ( boolexpr ) then stmt else stmt 〈else〉
+reduces:
+gotos:
+I_78 -- t"(" --> I_85
+
+I_79:
+arithexpr -> ⋅ multexpr arithexprprime 〈;〉
+assgstmt -> ID = ⋅ arithexpr ; 〈else〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, ;〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_79 -- nt"arithexpr" --> I_86
+
+I_80:
+arithexprprime -> - multexpr arithexprprime ⋅ 〈)〉
+reduces:
+t")" r 20
+gotos:
+
+I_81:
+arithexprprime -> + multexpr arithexprprime ⋅ 〈)〉
+reduces:
+t")" r 19
+gotos:
+
+I_82:
+compoundstmt -> { stmts ⋅ } 〈else〉
+reduces:
+gotos:
+I_82 -- t"}" --> I_87
+
+I_83:
+arithexpr -> ⋅ multexpr arithexprprime 〈<, <=, ==, >, >=〉
+boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, <=, ==, >, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+whilestmt -> while ( ⋅ boolexpr ) stmt 〈else〉
+reduces:
+gotos:
+I_83 -- nt"boolexpr" --> I_89
+
+I_84:
+assgstmt -> ⋅ ID = arithexpr ; 〈ID, if, while, {, }〉
+compoundstmt -> ⋅ { stmts } 〈ID, if, while, {, }〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈ID, if, while, {, }〉
+ifstmt -> if ( boolexpr ) then stmt else ⋅ stmt 〈ID, if, while, {, }〉
+stmt -> ⋅ assgstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ compoundstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ ifstmt 〈ID, if, while, {, }〉
+stmt -> ⋅ whilestmt 〈ID, if, while, {, }〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈ID, if, while, {, }〉
+reduces:
+gotos:
+I_84 -- nt"stmt" --> I_90
+
+I_85:
+arithexpr -> ⋅ multexpr arithexprprime 〈<, <=, ==, >, >=〉
+boolexpr -> ⋅ arithexpr boolop arithexpr 〈)〉
+ifstmt -> if ( ⋅ boolexpr ) then stmt else stmt 〈else〉
+multexpr -> ⋅ simpleexpr multexprprime 〈+, -, <, <=, ==, >, >=〉
+simpleexpr -> ⋅ ( arithexpr ) 〈multexprprime〉
+simpleexpr -> ⋅ ID 〈multexprprime〉
+simpleexpr -> ⋅ NUM 〈multexprprime〉
+reduces:
+gotos:
+I_85 -- nt"boolexpr" --> I_88
+
+I_86:
+assgstmt -> ID = arithexpr ⋅ ; 〈else〉
+reduces:
+gotos:
+I_86 -- t";" --> I_91
+
+I_87:
+compoundstmt -> { stmts } ⋅ 〈else〉
+reduces:
+t"else" r 6
+gotos:
+
+I_88:
+ifstmt -> if ( boolexpr ⋅ ) then stmt else stmt 〈else〉
+reduces:
+gotos:
+I_88 -- t")" --> I_93
+
+I_89:
+whilestmt -> while ( boolexpr ⋅ ) stmt 〈else〉
+reduces:
+gotos:
+I_89 -- t")" --> I_92
+
+I_90:
+ifstmt -> if ( boolexpr ) then stmt else stmt ⋅ 〈ID, if, while, {, }〉
+reduces:
+t"ID" r 9
+t"if" r 9
+t"while" r 9
+t"{" r 9
+t"}" r 9
+gotos:
+
+I_91:
+assgstmt -> ID = arithexpr ; ⋅ 〈else〉
+reduces:
+t"else" r 11
+gotos:
+
+I_92:
+assgstmt -> ⋅ ID = arithexpr ; 〈else〉
+compoundstmt -> ⋅ { stmts } 〈else〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈else〉
+stmt -> ⋅ assgstmt 〈else〉
+stmt -> ⋅ compoundstmt 〈else〉
+stmt -> ⋅ ifstmt 〈else〉
+stmt -> ⋅ whilestmt 〈else〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈else〉
+whilestmt -> while ( boolexpr ) ⋅ stmt 〈else〉
+reduces:
+gotos:
+I_92 -- nt"stmt" --> I_95
+
+I_93:
+ifstmt -> if ( boolexpr ) ⋅ then stmt else stmt 〈else〉
+reduces:
+gotos:
+I_93 -- t"then" --> I_94
+
+I_94:
+assgstmt -> ⋅ ID = arithexpr ; 〈else〉
+compoundstmt -> ⋅ { stmts } 〈else〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈else〉
+ifstmt -> if ( boolexpr ) then ⋅ stmt else stmt 〈else〉
+stmt -> ⋅ assgstmt 〈else〉
+stmt -> ⋅ compoundstmt 〈else〉
+stmt -> ⋅ ifstmt 〈else〉
+stmt -> ⋅ whilestmt 〈else〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈else〉
+reduces:
+gotos:
+I_94 -- nt"stmt" --> I_96
+
+I_95:
+whilestmt -> while ( boolexpr ) stmt ⋅ 〈else〉
+reduces:
+t"else" r 10
+gotos:
+
+I_96:
+ifstmt -> if ( boolexpr ) then stmt ⋅ else stmt 〈else〉
+reduces:
+gotos:
+I_96 -- t"else" --> I_97
+
+I_97:
+assgstmt -> ⋅ ID = arithexpr ; 〈else〉
+compoundstmt -> ⋅ { stmts } 〈else〉
+ifstmt -> ⋅ if ( boolexpr ) then stmt else stmt 〈else〉
+ifstmt -> if ( boolexpr ) then stmt else ⋅ stmt 〈else〉
+stmt -> ⋅ assgstmt 〈else〉
+stmt -> ⋅ compoundstmt 〈else〉
+stmt -> ⋅ ifstmt 〈else〉
+stmt -> ⋅ whilestmt 〈else〉
+whilestmt -> ⋅ while ( boolexpr ) stmt 〈else〉
+reduces:
+gotos:
+I_97 -- nt"stmt" --> I_98
+
+I_98:
+ifstmt -> if ( boolexpr ) then stmt else stmt ⋅ 〈else〉
+reduces:
+t"else" r 9
+gotos:
+

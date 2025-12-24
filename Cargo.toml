@@ -1,0 +1,11 @@
+[package]
+edition = "2024"
+name = "lr-analysis"
+version = "0.1.0"
+
+[dependencies]
+async-trait = "0.1.89"
+bumpalo = {version = "3.19.1"}
+clap = { version = "4.5.53", features = ["derive"] }
+pretty_assertions = "1.4.1"
+thiserror = "2.0.17"
