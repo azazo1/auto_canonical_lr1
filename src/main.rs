@@ -39,4 +39,5 @@ fn main() {
         }
         println!();
     }
+    println!("{}", Table::build_from(&family, &grammar).to_markdown());
 }

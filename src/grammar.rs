@@ -382,7 +382,11 @@ impl<'a> Grammar<'a> {
 mod test {
     use std::collections::BTreeSet;
 
-    use crate::{NonTerminal, Production, Terminal, Token, grammar::Grammar, token::EPSILON};
+    use crate::{
+        NonTerminal, Production, Terminal, Token,
+        grammar::Grammar,
+        token::{EOF, EPSILON},
+    };
     use bumpalo::Bump;
     use pretty_assertions::assert_eq;
 
@@ -425,6 +429,8 @@ mod test {
             NonTerminal::from("program").into(),
             NonTerminal::from("compoundstmt").into(),
             NonTerminal::from("stmt").into(),
+            EPSILON.into(),
+            EOF.into(),
             Terminal::from("ifstmt").into(),
             Terminal::from("whilestmt").into(),
             Terminal::from("assgstmt").into(),

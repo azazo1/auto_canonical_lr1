@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display, mem::swap};
 
-use crate::{Family, Grammar, NonTerminal, Terminal, Token, token::EOF};
+use crate::{Family, Grammar, NonTerminal, Terminal, Token};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum ActionCell {
@@ -165,7 +165,7 @@ impl<'a> Table<'a> {
                 .collect::<String>();
         let mut data_lines = String::new();
         for (i, (action_row, goto_row)) in self.action.iter().zip(self.goto.iter()).enumerate() {
-            let line = format!("| $I_{i}$ |")
+            let line = format!("| $I_{{{i}}}$ |")
                 + &action_row
                     .iter()
                     .map(|act| format!(" {act} |"))
@@ -224,12 +224,12 @@ mod test {
             r#"
 | | `{` | `}` | `stmts` | `ifstmt` | `assgstmt` | `whilestmt` | `E` | `eof` | `compoundstmt` | `program` | `programprime` | `stmt` |
 | - | - | - | - | - | - | - | - | - | - | - | - | - |
-| $I_0$ | s1 |  |  |  |  |  |  |  | 2 | 3 |  |  |
-| $I_1$ |  |  | s4 |  |  |  |  |  |  |  |  |  |
-| $I_2$ |  |  |  |  |  |  |  | r1 |  |  |  |  |
-| $I_3$ |  |  |  |  |  |  |  | acc |  |  |  |  |
-| $I_4$ |  | s5 |  |  |  |  |  |  |  |  |  |  |
-| $I_5$ |  |  |  |  |  |  |  | r5 |  |  |  |  |
+| $I_{0}$ | s1 |  |  |  |  |  |  |  | 2 | 3 |  |  |
+| $I_{1}$ |  |  | s4 |  |  |  |  |  |  |  |  |  |
+| $I_{2}$ |  |  |  |  |  |  |  | r1 |  |  |  |  |
+| $I_{3}$ |  |  |  |  |  |  |  | acc |  |  |  |  |
+| $I_{4}$ |  | s5 |  |  |  |  |  |  |  |  |  |  |
+| $I_{5}$ |  |  |  |  |  |  |  | r5 |  |  |  |  |
 "#
             .trim()
         );
