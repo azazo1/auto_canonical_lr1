@@ -126,8 +126,8 @@ impl<'a> Grammar<'a> {
     }
 
     /// 按产生式编号遍历产生式.
-    pub fn prods(&self) -> impl Iterator<Item = &'a Production<'a>> {
-        self.prods.iter().copied()
+    pub fn prods(&self) -> &[&'a Production<'a>] {
+        &self.prods
     }
 
     /// 获取产生式的编号, 如果产生式在文法中不存在, 那么返回 [`None`].
@@ -233,8 +233,12 @@ impl<'a> Grammar<'a> {
 
     /// 获取以某个非终结符为头部的所有产生式, 结果可能为空.
     #[must_use]
-    pub(crate) fn prods_of(&self, nt: NonTerminal<'a>) -> HashSet<&Production<'a>> {
-        self.prods().filter(|p| p.head == nt).collect()
+    pub(crate) fn prods_of(&self, nt: NonTerminal<'a>) -> HashSet<&'a Production<'a>> {
+        self.prods
+            .iter()
+            .copied()
+            .filter(|p| p.head == nt)
+            .collect()
     }
 
     /// 计算一个非终结符的 first 集.
