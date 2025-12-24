@@ -220,15 +220,23 @@ impl<'a> Table<'a> {
         &self,
         state: usize,
     ) -> Option<impl Iterator<Item = (Terminal<'a>, &ActionCell)>> {
-        self.action.get(state).map(|v| {
-            v.iter().enumerate().filter_map(|(i, a)| {
-                if a.is_empty() {
-                    None
-                } else {
-                    Some((self.terms[i], a))
-                }
-            })
-        })
+        let v = self.action.get(state)?;
+        Some(v.iter().enumerate().filter_map(|(i, a)| {
+            if a.is_empty() {
+                None
+            } else {
+                Some((self.terms[i], a))
+            }
+        }))
+    }
+
+    /// 查询 GOTO(state, non_term), 如果 state 或者 non_term 在 GOTO 表中不存在, 那么返回 [`None`].
+    /// 如果 state 没有 non_term 这个出边, 那么返回 `Some(None)`.
+    #[must_use]
+    pub fn goto(&self, state: usize, non_term: NonTerminal) -> Option<Option<usize>> {
+        let non_term_idx = *self.non_term_idxes.get(&non_term)?;
+        let row = self.goto.get(state)?;
+        Some(row[non_term_idx])
     }
 }
 
