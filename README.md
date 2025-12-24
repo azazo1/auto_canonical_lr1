@@ -1,4 +1,4 @@
-# auto LR
+# LR Analysis
 
 自动计算规范 LR(1) 文法的规范 LR(1) 项集族和语法分析表.
 
