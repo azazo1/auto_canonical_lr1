@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
     NonTerminal, Terminal, Token,
-    error::Error,
+    error::{Error, ParseProductionError},
     token::{EOF, EPSILON},
 };
 
@@ -173,22 +173,29 @@ impl<'a> Grammar<'a> {
         let mut tokens: BTreeSet<Token<'_>> = [EPSILON.into(), EOF.into()].into();
         let mut non_terminals = HashSet::new();
         let mut splitted: Vec<(&str, &str)> = Vec::new();
+        // 找出所有的非终结符.
         for (line_num, line) in s
             .lines()
             .enumerate()
             .filter(|(_, s)| !s.is_empty() && s.chars().any(|c| !c.is_whitespace()))
         {
-            let parts = line
-                .split_once("->")
-                .ok_or(Error::parse_production_error(line_num, "no arrow"))?;
+            let parts = line.split_once("->").ok_or(Error::parse_production_error(
+                line_num,
+                ParseProductionError::NoArrow,
+            ))?;
             let head_ident = parts.0.trim();
             splitted.push((head_ident, parts.1));
             non_terminals.insert(head_ident);
             tokens.insert(NonTerminal::from(head_ident).into());
         }
+        // 验证是否有起始符.
         if !non_terminals.contains(&start.as_str()) {
-            Err(Error::parse_production_error(0, "no start non-terminal"))?
+            Err(Error::parse_production_error(
+                0,
+                ParseProductionError::StartSymbolNotFound,
+            ))?
         }
+        // 解析所有产生式.
         let mut prods = Vec::new();
         let mut prod_indexes = HashMap::new();
         for (head_ident, tails) in splitted {
@@ -391,6 +398,53 @@ impl<'a> Grammar<'a> {
         }
         Ok(first_set)
     }
+
+    /// 使用当前的 CFG 语法解析一个产生式字符串.
+    ///
+    /// 如果产生式头部符号在语法中为非终结符, 那么返回 [`Error::ParseProductionError`] 中的 [`ParseProductionError::TokenTypeMisMatch`].
+    ///
+    /// 新的符号会被解析成终结符.
+    pub fn parse_production<'b>(&self, line: &'b str) -> Result<Production<'b>, Error> {
+        let parts = line.split_once("->").ok_or(Error::parse_production_error(
+            0,
+            ParseProductionError::NoArrow,
+        ))?;
+        let head = parts.0.trim();
+        if let Some(tok) = self.get_token(head)
+            && tok.is_term()
+        {
+            Err(Error::parse_production_error(
+                0,
+                ParseProductionError::TokenTypeMisMatch(head.to_string()),
+            ))?
+        }
+        let head = NonTerminal::from(head);
+        let tail = parts
+            .1
+            .split_ascii_whitespace()
+            .map(|s| {
+                let s = s.trim();
+                // 之所以这么绕着写是为了契合生命周期判断.
+                if let Some(tok) = self.get_token(s)
+                    && tok.is_non_term()
+                {
+                    NonTerminal::from(s).into()
+                } else {
+                    Terminal::from(s).into()
+                }
+            })
+            .collect();
+        Ok(Production::new(head, tail))
+    }
+
+    pub fn get_token<'b>(&self, tok: &'b str) -> Option<Token<'a>> {
+        // 这里的返回值并不会引用输入参数 tok, 函数返回之后就结束对 tok 的使用, 因此无视此处生命周期的编译报错.
+        let tok = unsafe { std::mem::transmute::<&'b str, &'a str>(tok) };
+        self.tokens
+            .get(&NonTerminal::from(tok).into())
+            .or_else(|| self.tokens.get(&Terminal::from(tok).into()))
+            .copied()
+    }
 }
 
 #[cfg(test)]
@@ -399,6 +453,7 @@ mod test {
 
     use crate::{
         NonTerminal, Production, Terminal, Token,
+        error::{Error, ParseProductionError},
         grammar::Grammar,
         token::{EOF, EPSILON},
     };
@@ -458,6 +513,24 @@ mod test {
         assert_eq!(grammar.start, "programprime".into());
         assert_eq!(grammar.prods, prods.iter().collect::<Vec<_>>());
         assert_eq!(grammar.tokens, tokens);
+        assert_eq!(
+            grammar.parse_production("S -> a b c"),
+            Ok(Production::new(
+                "S".into(),
+                vec![
+                    Terminal::from("a").into(),
+                    Terminal::from("b").into(),
+                    Terminal::from("c").into()
+                ]
+            ))
+        );
+        assert_eq!(
+            grammar.parse_production("ifstmt -> a"),
+            Err(Error::ParseProductionError {
+                line: 0,
+                cause: ParseProductionError::TokenTypeMisMatch("ifstmt".into())
+            })
+        )
     }
 
     #[test]
