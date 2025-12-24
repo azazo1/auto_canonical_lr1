@@ -207,10 +207,10 @@ impl<'a> Table<'a> {
     /// # Returns
     /// 如果项集族中没有这个状态或者文法中没有这个终结符, 那么返回 [`None`].
     #[must_use]
-    pub fn action(&self, state: usize, term: Terminal) -> Option<ActionCell> {
+    pub fn action(&self, state: usize, term: Terminal) -> Option<&ActionCell> {
         let term_idx = *self.term_idxes.get(&term)?;
         let row = self.action.get(state)?;
-        Some(row[term_idx].clone())
+        Some(&row[term_idx])
     }
 
     /// 遍历一个项集状态的所有非 [`ActionCell::Empty`] actions.
