@@ -363,13 +363,12 @@ impl<'a> Grammar<'a> {
 
     /// 计算一个 token 序列的 first 集
     ///
-    /// 如果 `seq` 为空, 那么会返回空的 [`HashSet`], 这和只有 [`EPSILON`] 的 HashSet 并不同,
-    /// 前者表示并非任何元素的 first 集, 后者表示某个 token 的 first 只能为空字符串 (tok -> epsilon).
+    /// 如果 `seq` 为空, 那么会返回空的 first 集, 这和只有 [`EPSILON`] 的 first 集类似,
     ///
     /// # Errors
     /// - [`Error::NonTerminalNotFound`]: `seq` 中存在文法中没有的非终结符.
     /// - [`Error::UnresolvableFirstSet`]: first 集无法收敛, 无法计算, 一般不会出现这种情况.
-    pub(crate) fn first_set(
+    pub fn first_set(
         &self,
         mut seq: impl Iterator<Item = Token<'a>>,
     ) -> Result<HashSet<Terminal<'a>>, Error> {
@@ -404,6 +403,21 @@ impl<'a> Grammar<'a> {
             }
         }
         Ok(first_set)
+    }
+
+    /// 计算 seq 的 first 集, 如果 seq 的 first 集中有 [`EPSILON`] 或者 first 集为空,
+    /// 那么附加 fallthrough 提供的终结符.
+    pub fn first_set_with_fallthrough(
+        &self,
+        seq: impl Iterator<Item = Token<'a>>,
+        fallthrough: impl Iterator<Item = Terminal<'a>>,
+    ) -> Result<HashSet<Terminal<'a>>, Error> {
+        let mut set = self.first_set(seq)?;
+        if set.is_empty() || set.contains(&EPSILON) {
+            set.remove(&EPSILON);
+            set.extend(fallthrough)
+        }
+        Ok(set)
     }
 
     /// 使用当前的 CFG 语法解析一个产生式字符串.

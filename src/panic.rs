@@ -65,7 +65,10 @@ impl<'a> Table<'a> {
                     // 尝试 goto
                     } else if self
                         .grammar()
-                        .first_set(panic_i.future_seq().copied())?
+                        .first_set_with_fallthrough(
+                            panic_i.future_seq().copied(),
+                            panic_i.look_aheads().iter().copied(),
+                        )?
                         .contains(&term)
                     {
                         return Ok(PanicAction::Shift(raw_expected, to));
