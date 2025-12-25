@@ -2,7 +2,7 @@
 
 自动计算规范 LR(1) 文法的规范 LR(1) 项集族和语法分析表.
 
-使用方法:
+## 使用方法
 
 1. 准备输入文法(`input.txt`):
 
@@ -35,3 +35,13 @@
 
 - eof: 使用 "eof" 表示 token 流末尾.
 - E: 使用 "E" 表示 $\epsilon$ 终结符.
+
+## 示例程序
+
+`rightmost_derivation` 是一个简单的使用此 crate 进行最右推导分析的示例程序.
+
+运行方法:
+
+```shell
+cargo run --example rightmost_derivation
+```
