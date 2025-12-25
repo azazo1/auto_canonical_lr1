@@ -2,6 +2,9 @@
 
 自动计算规范 LR(1) 文法的规范 LR(1) 项集族和语法分析表.
 
+给定 CFG 文法, 无需手动计算 first 集, follow 集, LR(1) 项集, LR(1) 集族, GOTO 表, ACTION 表等, 全部自动生成,
+并自动生成恐慌恢复机制.
+
 ## 使用方法
 
 1. 准备输入文法(`input.txt`):
@@ -29,7 +32,7 @@
    cargo run -q -- --symbol-start program < input.txt &> output.txt
    ```
 
-3. 获取输出(`output.txt`), 预期是能够输出项集族和语法分析表, 示例文法的输出见: [output](output.txt).
+3. 获取输出(`output.txt`), 预期是能够输出 LR(1) 项集族和语法分析表, 示例文法的输出见: [output](output.txt).
 
 ## 特殊终结符
 
