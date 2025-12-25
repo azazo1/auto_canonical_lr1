@@ -15,6 +15,7 @@ pub enum ActionCell {
     #[default]
     Empty,
 }
+
 impl Display for ActionCell {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.pad(&match self {
@@ -74,6 +75,7 @@ pub struct Table<'a> {
     action: Vec<Vec<ActionCell>>,
     /// GOTO 表, 每个格子表示 GOTO 到的项集状态编号.
     goto: Vec<Vec<Option<usize>>>,
+    /// [`Family::item_sets`] 中的顺序就是 GOTO 和 ACTION 表的状态顺序.
     family: &'a Family<'a>,
     grammar: &'a Grammar<'a>,
     /// ACTION 表中的终结符, 下标即为 ACTION 表中的列.
@@ -109,14 +111,19 @@ impl<'a> Table<'a> {
         let mut goto = vec![vec![None; goto_cols]; rows];
         let mut conflict = false;
         for (row, is) in family.item_sets().iter().enumerate() {
-            for (tok, to) in family.gotos_of(row).into_iter().flatten() {
+            for (tok, &to) in family
+                .gotos_of(row)
+                .into_iter()
+                .flatten()
+                .flat_map(|(tok, dests)| dests.iter().map(move |to| (tok, to)))
+            {
                 match tok {
                     Token::Terminal(t) => {
-                        let term_idx = *term_idxes.get(&t).unwrap();
+                        let term_idx = *term_idxes.get(t).unwrap();
                         conflict |= action[row][term_idx].update(ActionCell::Shift(to));
                     }
                     Token::NonTerminal(nt) => {
-                        let non_term_idx = *non_term_idxes.get(&nt).unwrap();
+                        let non_term_idx = *non_term_idxes.get(nt).unwrap();
                         goto[row][non_term_idx] = Some(to);
                     }
                 }
@@ -238,6 +245,18 @@ impl<'a> Table<'a> {
         let row = self.goto.get(state)?;
         Some(row[non_term_idx])
     }
+
+    #[inline]
+    #[must_use]
+    pub(crate) fn family(&self) -> &Family<'a> {
+        self.family
+    }
+
+    #[inline]
+    #[must_use]
+    pub(crate) fn grammar(&self) -> &Grammar<'a> {
+        self.grammar
+    }
 }
 
 #[cfg(test)]
@@ -270,7 +289,11 @@ mod test {
                 .gotos_of(idx)
                 .into_iter()
                 .flatten()
-                .for_each(|(tok, to)| println!("{idx} -- {tok} --> {to}"));
+                .for_each(|(tok, dests)| {
+                    dests
+                        .iter()
+                        .for_each(|to| println!("{idx} -- {tok} --> {to}"))
+                });
             println!();
         });
         let table = Table::build_from(&family, &grammar);

@@ -2,6 +2,7 @@ pub mod error;
 pub mod grammar;
 pub mod item;
 pub(crate) mod macros;
+pub mod panic;
 pub mod table;
 pub mod token;
 

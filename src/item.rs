@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeSet, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap},
     fmt::{Debug, Display},
     hash::Hash,
 };
@@ -112,12 +112,24 @@ impl<'a> Item<'a> {
         }
     }
 
-    fn future_seq(&self) -> impl Iterator<Item = &Token<'a>> {
+    /// dot 前进一格, 并限制 dot 在合理范围.
+    #[must_use]
+    pub(crate) fn with_dot_inc(&self) -> Self {
+        let dot = (self.dot + 1).min(self.prod.tail_without_eps().count());
+        Self {
+            prod: self.prod,
+            dot,
+            look_aheads: self.look_aheads.clone(),
+        }
+    }
+
+    pub(crate) fn future_seq(&self) -> impl Iterator<Item = &Token<'a>> {
         self.prod.tail_without_eps().skip(self.dot + 1)
     }
 
+    /// 获取当前项下一个期望的 [`Token`] (不包括 [`EPSILON`]), 如果处于可以归约的状态, 返回 [`None`]
     #[must_use]
-    fn expected(&self) -> Option<Token<'a>> {
+    pub fn expected(&self) -> Option<Token<'a>> {
         self.prod.tail_without_eps().nth(self.dot).copied()
     }
 
@@ -133,7 +145,7 @@ impl<'a> Item<'a> {
     }
 
     /// 返回可以执行 reduce 操作的终结符.
-    /// 如果不能 reduce, 那么返回 None.
+    /// 如果不能 reduce, 那么返回 [`None`].
     #[must_use]
     pub fn reduces(&self) -> Option<impl Iterator<Item = Terminal<'a>>> {
         if self.expected().is_some() {
@@ -150,6 +162,11 @@ impl<'a> Item<'a> {
     #[must_use]
     pub fn prod(&self) -> &'a Production<'a> {
         self.prod
+    }
+
+    #[must_use]
+    pub fn look_aheads(&self) -> &BTreeSet<Terminal<'a>> {
+        &self.look_aheads
     }
 }
 
@@ -273,7 +290,7 @@ impl<'a> ItemSet<'a> {
     }
 
     #[must_use]
-    pub(crate) fn goto(&self, token: Token<'a>) -> Option<Self> {
+    pub fn goto(&self, token: Token<'a>) -> Option<Self> {
         let items: BTreeSet<Item<'a>> = self.items.iter().filter_map(|i| i.goto(token)).collect();
         if items.is_empty() {
             None
@@ -304,10 +321,14 @@ impl<'a> ItemSet<'a> {
 pub struct Family<'a> {
     item_sets: Vec<&'a ItemSet<'a>>,
     #[allow(dead_code)]
-    item_sets_idx: HashMap<&'a ItemSet<'a>, usize>,
+    item_set_idxes: HashMap<&'a ItemSet<'a>, usize>,
     /// 描述了 goto 动作.
-    /// GOTO(key, value.0) = value.1
-    gotos: HashMap<usize, BTreeSet<(Token<'a>, usize)>>,
+    ///
+    /// # Note
+    /// HashMap 的键为项集状态编号, 值为每个项集状态的 goto 出边,
+    /// BTreeMap 表示对于每个特定项集状态, 经过 Token(key), 能够到达的新的项集状态的列表,
+    /// 如果文法是合法的 LR(1) 文法, 那么 BTreeSet<usize> 通常只会长度为 1.
+    gotos: HashMap<usize, BTreeMap<Token<'a>, BTreeSet<usize>>>,
 }
 
 impl<'a> Family<'a> {
@@ -319,7 +340,7 @@ impl<'a> Family<'a> {
         #[allow(clippy::mutable_key_type)]
         let mut item_sets_idx = HashMap::new();
         let mut item_sets = Vec::new();
-        let mut gotos: HashMap<usize, BTreeSet<(Token<'a>, usize)>> = HashMap::new();
+        let mut gotos: HashMap<usize, BTreeMap<Token<'a>, BTreeSet<usize>>> = HashMap::new();
         item_sets_idx.insert(i0, 0);
         item_sets.push(i0);
         loop {
@@ -331,12 +352,23 @@ impl<'a> Family<'a> {
                     };
                     let nis = &*bump.alloc(nis);
                     if let Some(&to) = item_sets_idx.get(&nis) {
-                        gotos.entry(from).or_default().insert((tok, to));
+                        gotos
+                            .entry(from)
+                            .or_default()
+                            .entry(tok)
+                            .or_default()
+                            .insert(to);
                     } else {
                         // 新加入的项集: nis
                         // GOTO(is, tok) = nis
                         let to = item_sets.len() + new_item_sets.len();
-                        gotos.entry(from).or_default().insert((tok, to));
+                        // 懒初始化
+                        gotos
+                            .entry(from)
+                            .or_default()
+                            .entry(tok)
+                            .or_default()
+                            .insert(to);
                         // println!("{:?}, {}, {}", tok, from, to);
                         new_item_sets.push(nis);
                         item_sets_idx.insert(nis, to);
@@ -350,7 +382,7 @@ impl<'a> Family<'a> {
             item_sets.extend(new_item_sets);
         }
         Self {
-            item_sets_idx,
+            item_set_idxes: item_sets_idx,
             item_sets,
             gotos,
         }
@@ -362,18 +394,27 @@ impl<'a> Family<'a> {
         &self.item_sets
     }
 
-    /// 遍历 gotos (起始项集, 转换 Token, 到达项集).
-    pub fn gotos(&self) -> impl Iterator<Item = (usize, Token<'a>, usize)> {
-        self.gotos
-            .iter()
-            .flat_map(|(&from, v)| v.iter().map(move |&(tok, to)| (from, tok, to)))
+    #[must_use]
+    pub fn index_of_item_set(&self, item_set: &ItemSet) -> Option<usize> {
+        // 参数只需要满足此函数调用的生命周期即可, 不需要 'a 生命周期.
+        let item_set = unsafe { std::mem::transmute::<&ItemSet, &ItemSet<'a>>(item_set) };
+        self.item_set_idxes.get(item_set).copied()
     }
 
-    /// 获取一个项集的 gotos: (转换 Token, 到达项集).
-    /// 如果 item_set, 没有对应项集, 或者项集没有出边, 那么返回 [`None`]
+    /// 遍历 gotos (起始项集, 转换 Token, 到达项集).
+    pub fn gotos(&self) -> impl Iterator<Item = (usize, Token<'a>, usize)> {
+        self.gotos.iter().flat_map(|(&from, v)| {
+            v.iter()
+                .flat_map(move |(&tok, dests)| dests.iter().map(move |&to| (from, tok, to)))
+        })
+    }
+
+    /// 获取一个项集的 gotos, see: [`Family::gotos`].
+    ///
+    /// 如果 item_set 没有对应项集, 或者项集没有出边, 那么返回 [`None`]
     #[must_use]
-    pub fn gotos_of(&self, item_set: usize) -> Option<impl Iterator<Item = (Token<'a>, usize)>> {
-        self.gotos.get(&item_set).map(|v| v.iter().copied())
+    pub fn gotos_of(&self, item_set: usize) -> Option<&BTreeMap<Token<'a>, BTreeSet<usize>>> {
+        self.gotos.get(&item_set)
     }
 
     /// 获取项集族数量
@@ -727,14 +768,14 @@ simpleexpr -> ID | NUM | ( arithexpr )"#,
         .unwrap();
         let family = Family::from_grammar(&grammar);
         assert_eq!(
-            family.gotos_of(42).map(|it| it.collect::<Vec<_>>()),
+            family.gotos_of(42),
             Some(
-                [
-                    (Terminal::from("(").into(), 20,),
-                    (Terminal::from("ID").into(), 21,),
-                    (Terminal::from("NUM").into(), 22,),
-                    (NonTerminal::from("multexpr").into(), 71,),
-                    (NonTerminal::from("simpleexpr").into(), 25,),
+                &[
+                    (Terminal::from("(").into(), [20].into()),
+                    (Terminal::from("ID").into(), [21].into()),
+                    (Terminal::from("NUM").into(), [22].into()),
+                    (NonTerminal::from("multexpr").into(), [71].into()),
+                    (NonTerminal::from("simpleexpr").into(), [25].into()),
                 ]
                 .into()
             )

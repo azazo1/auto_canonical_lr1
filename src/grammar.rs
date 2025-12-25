@@ -253,6 +253,9 @@ impl<'a> Grammar<'a> {
     /// - `recalc`: 是否重新计算.
     /// # Returns
     /// (是否需要重新计算, first 集).
+    /// # Errors
+    /// - [`Error::NonTerminalNotFound`]: `nt` 在文法中不存在.
+    /// - [`Error::InvalidFirstSetState`]: `nt` 正在被计算 first 集, 不能重复进入计算状态.
     fn calc_first(
         &self,
         nt: NonTerminal<'a>,
@@ -362,6 +365,10 @@ impl<'a> Grammar<'a> {
     ///
     /// 如果 `seq` 为空, 那么会返回空的 [`HashSet`], 这和只有 [`EPSILON`] 的 HashSet 并不同,
     /// 前者表示并非任何元素的 first 集, 后者表示某个 token 的 first 只能为空字符串 (tok -> epsilon).
+    ///
+    /// # Errors
+    /// - [`Error::NonTerminalNotFound`]: `seq` 中存在文法中没有的非终结符.
+    /// - [`Error::UnresolvableFirstSet`]: first 集无法收敛, 无法计算, 一般不会出现这种情况.
     pub(crate) fn first_set(
         &self,
         mut seq: impl Iterator<Item = Token<'a>>,

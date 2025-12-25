@@ -13,6 +13,10 @@ pub enum Error {
     NonTerminalNotFound(String),
     #[error("Grammar unresolvable first set, this should not present.")]
     UnresolvableFirstSet,
+    #[error("ItemSet state not found: {0}.")]
+    StateNotFound(usize),
+    #[error("Grammar is ambiguous.")]
+    AmbiguousGrammar,
 }
 
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]

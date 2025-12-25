@@ -34,8 +34,10 @@ fn main() {
             println!("{term:?} r {prod_idx}");
         }
         println!("gotos:");
-        for (tok, to) in family.gotos_of(from).into_iter().flatten() {
-            println!("I_{from} -- {tok:?} --> I_{to}");
+        for (tok, dests) in family.gotos_of(from).into_iter().flatten() {
+            for to in dests {
+                println!("I_{from} -- {tok:?} --> I_{to}");
+            }
         }
         println!();
     }
