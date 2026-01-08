@@ -261,6 +261,7 @@ ID = NUM
         }
     }
 
+    // 输出最右推导 (规约步骤翻转过来).
     for (idx, (step, cursor)) in steps.into_iter().enumerate().rev() {
         let line = step
             .into_iter()

@@ -32,6 +32,9 @@ impl<'a> Table<'a> {
     /// - [`Error::StateNotFound`] 项集状态不存在.
     /// - [`Error::AmbiguousGrammar`] 文法是二义性的.
     /// - 其他见: [`Grammar::first_set`].
+    /// # Note
+    /// 这个实现并不是时间复杂度 O(1) 的, 但是实际上一个文法的 `panic_action` 函数的输出只依赖与 state 和 term 输入,
+    /// 因此可以提前建表以实现 O(1) 时间复杂度查询.
     pub fn panic_action(&self, state: usize, term: Terminal) -> Result<PanicAction<'a>, Error> {
         let is = self
             .family()
