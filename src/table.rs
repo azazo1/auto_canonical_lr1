@@ -263,7 +263,7 @@ impl<'a> Table<'a> {
 mod test {
     use bumpalo::Bump;
 
-    use crate::{Family, Grammar, table::Table};
+    use crate::{Family, Grammar, panic::PanicAction, table::Table};
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -312,5 +312,73 @@ mod test {
 "#
             .trim()
         );
+    }
+
+    /// ```c
+    /// enum ActionType {
+    ///     ActionEmpty = 0,
+    ///     ActionShift = 1,
+    ///     ActionReduce = 2,
+    ///     ActionConflict = 3,
+    ///     ActionAccept = 4
+    /// };
+    ///
+    /// struct Action {
+    ///     ActionType type;
+    ///
+    ///     union {
+    ///         usize reduce_prod;
+    ///         usize shift_state;
+    ///     };
+    /// };
+    ///
+    /// struct PanicAction {
+    ///     ActionType type;
+    ///
+    ///     struct {
+    ///         Terminal skipped;
+    ///         usize to;
+    ///     } shift;
+    ///
+    ///     usize reduce_prod;
+    /// };
+    /// ```
+    #[test]
+    fn panic_action_table_for_cpp() {
+        let bump = Bump::new();
+        let inp = include_str!("../input.txt");
+        let grammar = Grammar::from_cfg(inp, "program".into(), &bump)
+            .unwrap()
+            .augmented();
+        let family = Family::from_grammar(&grammar);
+        let table = Table::build_from(&family, &grammar);
+        let mut panic_action_table =
+            vec![vec![PanicAction::Empty; table.action_cols()]; table.rows()];
+        for (state, row) in panic_action_table.iter_mut().enumerate() {
+            for &term in &table.terms {
+                let term_idx = *table.term_idxes.get(&term).unwrap();
+                row[term_idx] = table.panic_action(state, term).unwrap();
+            }
+        }
+        for row in panic_action_table {
+            print!("{{");
+            for cell in row {
+                match cell {
+                    PanicAction::Shift(skipped, new_state) => {
+                        print!("{{ ActionShift, {{ \"{skipped}\", {new_state} }}, 0 }},");
+                    }
+                    PanicAction::Reduce(prod) => {
+                        print!("{{ ActionReduce, {{ \"\", 0 }}, {prod} }},");
+                    }
+                    PanicAction::Accept => {
+                        print!("{{ ActionAccept, {{ \"\", 0 }}, 0 }},");
+                    }
+                    PanicAction::Empty => {
+                        print!("{{ ActionEmpty, {{ \"\", 0 }}, 0 }},");
+                    }
+                }
+            }
+            println!("}},");
+        }
     }
 }
