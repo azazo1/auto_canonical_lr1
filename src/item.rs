@@ -119,6 +119,7 @@ impl<'a> Item<'a> {
         }
     }
 
+    /// 获取不包括 [`Item::expected`] 的未来可接受序列.
     pub(crate) fn future_seq(&self) -> impl Iterator<Item = &Token<'a>> {
         self.prod.tail_without_eps().skip(self.dot + 1)
     }
