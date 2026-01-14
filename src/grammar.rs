@@ -91,14 +91,6 @@ impl<'a> Production<'a> {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-enum FirstSet<'a> {
-    Presense(HashSet<Terminal<'a>>),
-    #[default]
-    Calculating,
-    NotPresense,
-}
-
 #[derive(Debug, Clone)]
 pub struct Grammar<'a> {
     bump: &'a Bump,
@@ -106,9 +98,8 @@ pub struct Grammar<'a> {
     prod_indexes: HashMap<&'a Production<'a>, usize>,
     tokens: BTreeSet<Token<'a>>,
     start: NonTerminal<'a>,
-    /// 缓存的各个非终结符的 first 集,
-    /// 在 [`Grammar`] 创建的时候为每个 [`NonTerminal`] 初始化为 [`FirstSet::None`],
-    first_sets: HashMap<NonTerminal<'a>, RefCell<FirstSet<'a>>>,
+    // 各个非终结符的 first 集, 在文法创建的时候计算.
+    first_sets: RefCell<HashMap<NonTerminal<'a>, HashSet<Terminal<'a>>>>,
 }
 
 impl PartialEq for Grammar<'_> {
@@ -157,8 +148,10 @@ impl<'a> Grammar<'a> {
         self.prods.insert(0, augmented_prod);
         self.prod_indexes.insert(augmented_prod, 0);
         self.tokens.insert(augmented_start.into());
+        let raw_first_set = self.first_sets.borrow().get(&self.start).unwrap().clone();
         self.first_sets
-            .insert(augmented_start, RefCell::new(FirstSet::NotPresense));
+            .borrow_mut()
+            .insert(augmented_start, raw_first_set);
         Self {
             bump: self.bump,
             prods: self.prods,
@@ -219,23 +212,16 @@ impl<'a> Grammar<'a> {
                 prods.push(prod);
             }
         }
-        let first_sets = tokens
-            .iter()
-            .copied()
-            .filter_map(|t| match t {
-                Token::NonTerminal(nt) => Some(nt),
-                _ => None,
-            })
-            .map(|t| (t, RefCell::new(FirstSet::NotPresense)))
-            .collect();
-        Ok(Grammar {
+        let grammar = Grammar {
             prod_indexes,
             prods,
             start,
             bump,
             tokens,
-            first_sets,
-        })
+            first_sets: RefCell::new(HashMap::new()),
+        };
+        grammar.compute_all_first_sets();
+        Ok(grammar)
     }
 
     /// 获取以某个非终结符为头部的所有产生式, 结果可能为空.
@@ -248,161 +234,108 @@ impl<'a> Grammar<'a> {
             .collect()
     }
 
-    /// 计算一个非终结符的 first 集.
-    /// # Parameters
-    /// - `recalc`: 是否重新计算.
-    /// # Returns
-    /// (是否需要重新计算, first 集).
-    /// # Errors
-    /// - [`Error::NonTerminalNotFound`]: `nt` 在文法中不存在.
-    /// - [`Error::InvalidFirstSetState`]: `nt` 正在被计算 first 集, 不能重复进入计算状态.
-    fn calc_first(
-        &self,
-        nt: NonTerminal<'a>,
-        recalc: bool,
-    ) -> Result<(bool, HashSet<Terminal<'a>>), Error> {
-        let mut first_set = self
-            .first_sets
-            .get(&nt)
-            .ok_or(Error::NonTerminalNotFound(nt.as_str().to_string()))?
-            .borrow_mut();
-        match &*first_set {
-            FirstSet::Calculating => Err(Error::InvalidFirstSetState)?,
-            FirstSet::Presense(first_set) => {
-                // 如果是正在重新计算, 那么跳过缓存.
-                if !recalc {
-                    return Ok((false, first_set.clone()));
-                }
-            }
-            _ => (),
-        }
-        *first_set = FirstSet::Calculating;
-        drop(first_set);
-        let mut first_set = HashSet::new();
-        let mut should_recalc = false; // 标记自身 first 集是否需要重新计算.
-        let mut need_recalc = HashSet::new(); // 需要重新计算 first 集的 productions.
-        for prod in self.prods_of(nt) {
-            let mut tail = prod.tail().iter();
-            let mut should_break = false;
-            while !should_break {
-                should_break = true;
-                match tail.next() {
-                    None => {
-                        first_set.insert(EPSILON);
-                    }
-                    Some(Token::Terminal(EPSILON)) => {
-                        // pass through
-                        should_break = false;
-                    }
-                    Some(Token::Terminal(t)) => {
-                        first_set.insert(*t);
-                    }
-                    Some(Token::NonTerminal(nt)) => match self.calc_first(*nt, false) {
-                        Ok((recalc, s)) => {
-                            first_set.extend(s.iter().filter(|t| **t != EPSILON));
-                            if s.contains(&EPSILON) {
-                                should_break = false;
-                            }
-                            if recalc {
-                                need_recalc.insert(prod);
-                            }
-                        }
-                        Err(Error::InvalidFirstSetState) => {
-                            // 遇到了左递归, 暂时不使用这个产生式的内容, 延迟计算 first 集.
-                            should_recalc = true;
-                        }
-                        Err(e) => Err(e)?,
-                    },
-                }
-            }
-        }
+    /// 不动点迭代计算所有 FIRST 集
+    fn compute_all_first_sets(&self) {
+        let mut sets = self.first_sets.borrow_mut();
+        sets.clear();
+        let mut changed = true;
 
-        // 先提供一个临时的 first set 给子递归使用.
-        *self.first_sets.get(&nt).unwrap().borrow_mut() = FirstSet::Presense(first_set.clone());
+        while changed {
+            changed = false;
 
-        for prod in need_recalc {
-            let mut tail = prod.tail().iter();
-            let mut should_break = false;
-            while !should_break {
-                should_break = true;
-                match tail.next() {
-                    None => {
-                        first_set.insert(EPSILON);
-                    }
-                    Some(Token::Terminal(EPSILON)) => {
-                        // pass through
-                        should_break = false;
-                    }
-                    Some(Token::Terminal(t)) => {
-                        first_set.insert(*t);
-                    }
-                    Some(Token::NonTerminal(nt)) => match self.calc_first(*nt, true) {
-                        Ok((recalc, s)) => {
-                            first_set.extend(s.iter().filter(|t| **t != EPSILON));
-                            if s.contains(&EPSILON) {
-                                should_break = false;
+            for prod in &self.prods {
+                let head = prod.head();
+                let mut item_changed = false;
+
+                // head 的 first 集是否有 eps.
+                let mut derive_epsilon = true;
+                // 模拟扫描产生式右部
+                for token in prod.tail() {
+                    match token {
+                        Token::Terminal(t) => {
+                            if *t == EPSILON {
+                                // 继续看下一个符号
+                                continue;
                             }
-                            if recalc {
-                                // 已经给这个非终结符 (nt) 提供了自身的 first 集, 但是其还是说自身需要重新计算,
-                                // 那么说明问题不出在自身, 无法在此处解决, 标记自身需要重新计算, 等待 caller 重新计算.
-                                should_recalc = true;
+                            // 遇到终结符, 加入到 head 的 FIRST 集
+                            if sets.entry(head).or_default().insert(*t) {
+                                item_changed = true;
+                            }
+                            derive_epsilon = false;
+                            break;
+                        }
+                        Token::NonTerminal(nt) => {
+                            // 防止借用冲突, 直接克隆.
+                            let nt_first = sets.entry(*nt).or_default().clone();
+                            let head_first = sets.entry(head).or_default();
+
+                            // 如果 head == *nt, 那么直接跳过, 因为不会添加任何东西.
+                            if *nt != head {
+                                for &f_token in nt_first.iter() {
+                                    if f_token != EPSILON && head_first.insert(f_token) {
+                                        item_changed = true;
+                                    }
+                                }
+                            }
+
+                            if !nt_first.contains(&EPSILON) {
+                                derive_epsilon = false;
+                                break;
                             }
                         }
-                        Err(Error::InvalidFirstSetState) => {
-                            // 遇到了左递归, 暂时不使用这个产生式的内容, 延迟计算 first 集.
-                            should_recalc = true;
-                        }
-                        Err(e) => Err(e)?,
-                    },
+                    }
+                }
+
+                if derive_epsilon && sets.entry(head).or_default().insert(EPSILON) {
+                    item_changed = true;
+                }
+
+                if item_changed {
+                    changed = true;
                 }
             }
         }
-        *self.first_sets.get(&nt).unwrap().borrow_mut() = FirstSet::Presense(first_set.clone());
-        Ok((should_recalc, first_set))
     }
 
-    /// 计算一个 token 序列的 first 集
-    ///
-    /// 如果 `seq` 为空, 那么会返回空的 first 集, 这和只有 [`EPSILON`] 的 first 集类似,
-    ///
+    /// 获取一个 symbol 序列的 first 集, 如果序列为空, 那么返回一个包含 [`EPSILON`] 的 HashSet.
     /// # Errors
-    /// - [`Error::NonTerminalNotFound`]: `seq` 中存在文法中没有的非终结符.
-    /// - [`Error::UnresolvableFirstSet`]: first 集无法收敛, 无法计算, 一般不会出现这种情况.
+    /// - [`Error::FirstSetNotCalc`]: 文法的 first 集没有预先计算.
     pub fn first_set(
         &self,
-        mut seq: impl Iterator<Item = Token<'a>>,
+        seq: impl Iterator<Item = Token<'a>>,
     ) -> Result<HashSet<Terminal<'a>>, Error> {
-        let mut should_break = false;
-        let mut first_set = HashSet::new();
-        while !should_break {
-            should_break = true;
-            match seq.next() {
-                None => {
-                    first_set.insert(EPSILON);
-                }
-                Some(Token::Terminal(EPSILON)) => {
-                    should_break = false;
-                }
-                Some(Token::Terminal(t)) => {
-                    first_set.insert(t);
-                }
-                Some(Token::NonTerminal(nt)) => {
-                    let (recalc, mut fs) = self.calc_first(nt, false)?;
-                    if recalc {
-                        let (recalc, fs_) = self.calc_first(nt, true)?;
-                        if recalc {
-                            Err(Error::UnresolvableFirstSet)?
-                        }
-                        fs = fs_;
+        let mut result = HashSet::new();
+        let mut derive_epsilon = true;
+
+        for token in seq {
+            match token {
+                Token::Terminal(t) => {
+                    if t == EPSILON {
+                        continue;
                     }
-                    first_set.extend(fs.iter().filter(|t| **t != EPSILON));
-                    if fs.contains(&EPSILON) {
-                        should_break = false;
+                    result.insert(t);
+                    derive_epsilon = false;
+                    break;
+                }
+                Token::NonTerminal(nt) => {
+                    let fsets = self.first_sets.borrow();
+                    let nt_set = fsets.get(&nt).ok_or(Error::FirstSetNotCalc)?;
+                    for &f in nt_set {
+                        if f != EPSILON {
+                            result.insert(f);
+                        }
+                    }
+                    if !nt_set.contains(&EPSILON) {
+                        derive_epsilon = false;
+                        break;
                     }
                 }
             }
         }
-        Ok(first_set)
+        if derive_epsilon {
+            result.insert(EPSILON);
+        }
+        Ok(result)
     }
 
     /// 计算 seq 的 first 集, 如果 seq 的 first 集中有 [`EPSILON`] 或者 first 集为空,
@@ -581,6 +514,94 @@ mod test {
                 .first_set([programprime.into()].into_iter())
                 .unwrap(),
             [brace_l, stmt, EPSILON].into()
+        );
+    }
+
+    // fixme: 直接左递归无法获取正确的结果.
+    #[test]
+    fn first_with_left_recursive() {
+        let bump = Bump::new();
+        let grammar =
+            Grammar::from_cfg("program -> program good | nice", "program".into(), &bump).unwrap();
+        assert_eq!(
+            grammar
+                .first_set([NonTerminal::from("program").into()].into_iter())
+                .unwrap(),
+            [Terminal::from("nice")].into()
+        );
+    }
+
+    #[test]
+    fn first_with_left_recursive_epsilon() {
+        let bump = Bump::new();
+        let grammar = Grammar::from_cfg("A -> A a | E", "A".into(), &bump).unwrap();
+
+        let result = grammar
+            .first_set([NonTerminal::from("A").into()].into_iter())
+            .unwrap();
+        assert_eq!(result, [Terminal::from("a"), EPSILON].into());
+    }
+
+    #[test]
+    fn first_with_complex_indirect_left_recursion() {
+        let bump = Bump::new();
+        // 构造一个复杂的间接左递归文法:
+        // 依赖链: S -> A -> B -> C -> S
+        //
+        // 关键点解析:
+        // 1. C -> E, 导致 C 可空.
+        // 2. B -> C, 导致 B 可空.
+        // 3. A -> B, 导致 A 可空.
+        // 4. S -> A x. 因为 A 可空, 所以 'x' 必须加入 FIRST(S).
+        // 5. C -> S. 因为 S 包含 'x', 所以 'x' 必须传播回 FIRST(C).
+        // 6. 进而 'x' 传播回 FIRST(B) 和 FIRST(A).
+        let grammar = Grammar::from_cfg(
+            "
+                S -> A x
+                A -> B | y
+                B -> C | z
+                C -> S | E
+                ",
+            "S".into(),
+            &bump,
+        )
+        .unwrap();
+
+        let s = NonTerminal::from("S");
+        let a = NonTerminal::from("A");
+        let b = NonTerminal::from("B");
+        let c = NonTerminal::from("C");
+
+        let term_x = Terminal::from("x");
+        let term_y = Terminal::from("y");
+        let term_z = Terminal::from("z");
+
+        // 验证 S (S 不包含 EPSILON，因为 S -> A x, x 是终结符且不可空)
+        // FIRST(S) = {y, z, x}
+        assert_eq!(
+            grammar.first_set([s.into()].into_iter()).unwrap(),
+            [term_x, term_y, term_z].into()
+        );
+
+        // 验证 A (继承自 B, 且包含 y, 且可空)
+        // FIRST(A) = {y, z, x, E}
+        assert_eq!(
+            grammar.first_set([a.into()].into_iter()).unwrap(),
+            [term_x, term_y, term_z, EPSILON].into()
+        );
+
+        // 验证 B (继承自 C, 且包含 z, 且可空)
+        // FIRST(B) = {y, z, x, E}
+        assert_eq!(
+            grammar.first_set([b.into()].into_iter()).unwrap(),
+            [term_x, term_y, term_z, EPSILON].into()
+        );
+
+        // 验证 C (继承自 S, 且包含 E)
+        // FIRST(C) = {y, z, x, E}
+        assert_eq!(
+            grammar.first_set([c.into()].into_iter()).unwrap(),
+            [term_x, term_y, term_z, EPSILON].into()
         );
     }
 }

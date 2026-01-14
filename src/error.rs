@@ -7,8 +7,8 @@ pub enum Error {
     },
     #[error("Grammar may be not augmented")]
     GrammarNotAugmented,
-    #[error("First set state is calculating, maybe some errors occurred.")]
-    InvalidFirstSetState,
+    #[error("First set is not calculated.")]
+    FirstSetNotCalc,
     #[error("Grammar does not contain the non-terminal: {0}.")]
     NonTerminalNotFound(String),
     #[error("Grammar unresolvable first set, this should not present.")]
