@@ -86,6 +86,8 @@ fn reduce<'a>(
         info!("reduce goto {new_state}");
         debug!("I_{new_state}: {:#?}", family.item_sets().get(new_state));
         stack.push(new_state);
+    } else if prod.head() != grammar.symbol_start() || stack.len() != 1 {
+        panic!("invalid goto: {:?} {:?}", stack, prod);
     }
 }
 
