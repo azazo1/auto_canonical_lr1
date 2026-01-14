@@ -3,7 +3,7 @@
 #[allow(unused_imports)]
 use crate::Grammar;
 
-use crate::{Table, Terminal, Token, error::Error};
+use crate::{EPSILON, Table, Terminal, Token, error::Error};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PanicAction<'a> {
@@ -70,7 +70,9 @@ impl<'a> Table<'a> {
                     } else if self
                         .grammar()
                         .first_set_with_fallthrough(
-                            panic_i.future_seq().copied(),
+                            [panic_i.expected().unwrap_or(EPSILON.into())]
+                                .into_iter()
+                                .chain(panic_i.future_seq().copied()),
                             panic_i.look_aheads().iter().copied(),
                         )?
                         .contains(&term)
