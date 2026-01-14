@@ -62,6 +62,7 @@ impl<'a> Table<'a> {
                     }
                     let to = *to.first().unwrap();
                     // 尝试 reduce
+                    // todo fixme: 使用迭代器的方法会导致无法充分利用 BTreeSet 的特性, 使得 lgN 的时间复杂度降级成 N.
                     if panic_i.reduces().into_iter().flatten().any(|t| t == term) {
                         // 先移入这个终结符, 然后才能到达归约/接收状态, 后者为恢复之后的 actions.
                         return Ok(PanicAction::Shift(raw_expected, to));
