@@ -4,11 +4,7 @@ use std::{
     hash::Hash,
 };
 
-use crate::{
-    Grammar, Production, Terminal, Token,
-    error::Error,
-    token::{EOF, EPSILON},
-};
+use crate::{Grammar, Production, Terminal, Token, error::Error, token::EOF};
 
 // hashset hash 的时候需要注意, 必须要按照特定的顺序进行 hash 计算,
 // 不然相等对象由于哈希集合的无序性就会产生不同的 hash 结果.
@@ -261,16 +257,15 @@ impl<'a> ItemSet<'a> {
                 let Some(Token::NonTerminal(nt)) = item.expected() else {
                     continue;
                 };
-                let mut look_aheads: BTreeSet<_> = self
+                let look_aheads: BTreeSet<_> = self
                     .grammar
-                    .first_set(item.future_seq().copied())
+                    .first_set_with_fallthrough(
+                        item.future_seq().copied(),
+                        item.look_aheads().iter().copied(),
+                    )
                     .unwrap()
                     .into_iter()
                     .collect();
-                if look_aheads.contains(&EPSILON) {
-                    look_aheads.remove(&EPSILON);
-                    look_aheads.extend(&item.look_aheads);
-                }
                 let prods = self.grammar.prods_of(nt);
                 new_items.insert(item.clone());
                 for prod in prods {
